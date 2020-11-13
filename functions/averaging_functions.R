@@ -3,8 +3,8 @@ average_timestep_data = function(data) {
   i = 1
   sum_data_list = list()
   
-  runs = unique(data$run)
-  agents = unique(data$agent)
+  runs = order(unique(data$run))
+  agents = order(unique(data$agent))
   
   for (r in runs) {
     for (a in agents){
@@ -127,9 +127,10 @@ average_timestep_data = function(data) {
   sum_data$concept_phi_mean[is.nan(sum_data$concept_phi_mean)] = 0
   sum_data$concept_phi_max[is.infinite(sum_data$concept_phi_max)] = 0
   
+  sum_data = sum_data[complete.cases(sum_data),]
   
   # Give message of progress
-  cat("\rDone              ")
+  cat("\rDone :)                      ")
   
   return(sum_data)
 }
@@ -163,7 +164,7 @@ smoothing_average_data = function(data, window_size = 6){
           #Average within the window
           df_sub_smooth[r,c] = mean(df_sub[(r-window_size):r,c])
           
-        #For others
+          #For others
         } else {
           
           #Average from beginning
@@ -187,4 +188,138 @@ smoothing_average_data = function(data, window_size = 6){
 }
 
 
+
+average_across_LODs <- function(averaged_data, fitness_data, task) {
+  
+  agents = order(unique(averaged_data$agent))
+  print(agents)
+  data_list = list()
+  i = 1
+  
+  #Go through each agent one by one
+  for (a in agents){
+    
+    # Message of progress
+    cat("\rAgent: ",a,"     ")
+    
+    
+    #Make a subset with data for that agent across all runs
+    d = subset(averaged_data, agent == a)
+    
+    square_root_of_n = sqrt(length(d$agent))
+    
+    data_list[[i]] = data.frame(
+      
+      Task=task, Generation = a,
+      
+      fitness = mean(fitness_data[fitness_data$agent==a,]$fitness),
+      fitness_se = sd(fitness_data[fitness_data$agent==a,]$fitness)/square_root_of_n,
+      
+      #Summarize IIT measures
+      Phi = mean(d$Phi_mean),
+      Phi_se = sd(d$Phi_mean)/square_root_of_n,
+      Phi_max = mean(d$Phi_max),
+      Phi_max_se = sd(d$Phi_max)/square_root_of_n,
+      
+      n_concepts = mean(d$n_concepts_mean),
+      n_concepts_se = sd(d$n_concepts_mean)/square_root_of_n,
+      n_concepts_max = mean(d$n_concepts_max),
+      n_concepts_max_se = sd(d$n_concepts_max)/square_root_of_n,
+      
+      # Surprisal relative to all states
+      surprisal_system_uncond_all_mean = mean(d$surprisal_system_uncond_all_mean),
+      surprisal_system_uncond_all_sd = sd(d$surprisal_system_uncond_all_mean)/square_root_of_n,
+      
+      surprisal_system_cond1_all_mean = mean(d$surprisal_system_cond1_all_mean),
+      surprisal_system_cond1_all_sd = sd(d$surprisal_system_cond1_all_mean)/square_root_of_n,
+      
+      surprisal_system_cond2_all_mean = mean(d$surprisal_system_cond2_all_mean),
+      surprisal_system_cond2_all_sd = sd(d$surprisal_system_cond2_all_mean)/square_root_of_n,
+      
+      surprisal_blanket_uncond_all_mean = mean(d$surprisal_blanket_uncond_all_mean),
+      surprisal_blanket_uncond_all_sd = sd(d$surprisal_blanket_uncond_all_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond1_all_mean = mean(d$surprisal_blanket_cond1_all_mean),
+      surprisal_blanket_cond1_all_sd = sd(d$surprisal_blanket_cond1_all_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond2_all_mean = mean(d$surprisal_blanket_cond2_all_mean),
+      surprisal_blanket_cond2_all_sd = sd(d$surprisal_blanket_cond2_all_mean)/square_root_of_n,
+      
+      surprisal_internal_uncond_all_mean = mean(d$surprisal_internal_uncond_all_mean),
+      surprisal_internal_uncond_all_sd = sd(d$surprisal_internal_uncond_all_mean)/square_root_of_n,
+      
+      surprisal_internal_cond1_all_mean = mean(d$surprisal_internal_cond1_all_mean),
+      surprisal_internal_cond1_all_sd = sd(d$surprisal_internal_cond1_all_mean)/square_root_of_n,
+      
+      surprisal_internal_cond2_all_mean = mean(d$surprisal_internal_cond2_all_mean),
+      surprisal_internal_cond2_all_sd = sd(d$surprisal_internal_cond2_all_mean)/square_root_of_n,
+      
+      # Surprisal relative to LOD states
+      surprisal_system_uncond_LOD_mean = mean(d$surprisal_system_uncond_LOD_mean),
+      surprisal_system_uncond_LOD_sd = sd(d$surprisal_system_uncond_LOD_mean)/square_root_of_n,
+      
+      surprisal_system_cond1_LOD_mean = mean(d$surprisal_system_cond1_LOD_mean),
+      surprisal_system_cond1_LOD_sd = sd(d$surprisal_system_cond1_LOD_mean)/square_root_of_n,
+      
+      surprisal_system_cond2_LOD_mean = mean(d$surprisal_system_cond2_LOD_mean),
+      surprisal_system_cond2_LOD_sd = sd(d$surprisal_system_cond2_LOD_mean)/square_root_of_n,
+      
+      surprisal_blanket_uncond_LOD_mean = mean(d$surprisal_blanket_uncond_LOD_mean),
+      surprisal_blanket_uncond_LOD_sd = sd(d$surprisal_blanket_uncond_LOD_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond1_LOD_mean = mean(d$surprisal_blanket_cond1_LOD_mean),
+      surprisal_blanket_cond1_LOD_sd = sd(d$surprisal_blanket_cond1_LOD_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond2_LOD_mean = mean(d$surprisal_blanket_cond2_LOD_mean),
+      surprisal_blanket_cond2_LOD_sd = sd(d$surprisal_blanket_cond2_LOD_mean)/square_root_of_n,
+      
+      surprisal_internal_uncond_LOD_mean = mean(d$surprisal_internal_uncond_LOD_mean),
+      surprisal_internal_uncond_LOD_sd = sd(d$surprisal_internal_uncond_LOD_mean)/square_root_of_n,
+      
+      surprisal_internal_cond1_LOD_mean = mean(d$surprisal_internal_cond1_LOD_mean),
+      surprisal_internal_cond1_LOD_sd = sd(d$surprisal_internal_cond1_LOD_mean)/square_root_of_n,
+      
+      surprisal_internal_cond2_LOD_mean = mean(d$surprisal_internal_cond2_LOD_mean),
+      surprisal_internal_cond2_LOD_sd = sd(d$surprisal_internal_cond2_LOD_mean)/square_root_of_n,
+      
+      
+      # Surprisal relative to animat states
+      surprisal_system_uncond_animat_mean = mean(d$surprisal_system_uncond_animat_mean),
+      surprisal_system_uncond_animat_sd = sd(d$surprisal_system_uncond_animat_mean)/square_root_of_n,
+      
+      surprisal_system_cond1_animat_mean = mean(d$surprisal_system_cond1_animat_mean),
+      surprisal_system_cond1_animat_sd = sd(d$surprisal_system_cond1_animat_mean)/square_root_of_n,
+      
+      surprisal_system_cond2_animat_mean = mean(d$surprisal_system_cond2_animat_mean),
+      surprisal_system_cond2_animat_sd = sd(d$surprisal_system_cond2_animat_mean)/square_root_of_n,
+      
+      surprisal_blanket_uncond_animat_mean = mean(d$surprisal_blanket_uncond_animat_mean),
+      surprisal_blanket_uncond_animat_sd = sd(d$surprisal_blanket_uncond_animat_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond1_animat_mean = mean(d$surprisal_blanket_cond1_animat_mean),
+      surprisal_blanket_cond1_animat_sd = sd(d$surprisal_blanket_cond1_animat_mean)/square_root_of_n,
+      
+      surprisal_blanket_cond2_animat_mean = mean(d$surprisal_blanket_cond2_animat_mean),
+      surprisal_blanket_cond2_animat_sd = sd(d$surprisal_blanket_cond2_animat_mean)/square_root_of_n,
+      
+      surprisal_internal_uncond_animat_mean = mean(d$surprisal_internal_uncond_animat_mean),
+      surprisal_internal_uncond_animat_sd = sd(d$surprisal_internal_uncond_animat_mean)/square_root_of_n,
+      
+      surprisal_internal_cond1_animat_mean = mean(d$surprisal_internal_cond1_animat_mean),
+      surprisal_internal_cond1_animat_sd = sd(d$surprisal_internal_cond1_animat_mean)/square_root_of_n,
+      
+      surprisal_internal_cond2_animat_mean = mean(d$surprisal_internal_cond2_animat_mean),
+      surprisal_internal_cond2_animat_sd = sd(d$surprisal_internal_cond2_animat_mean)/square_root_of_n
+    )
+    
+    i = i + 1
+  } # end loop over agents
+  
+  averaged_LOD_data = do.call(rbind, data_list)
+  
+  cat("\rDone     ")
+  
+  return(averaged_LOD_data)
+  
+}
 
