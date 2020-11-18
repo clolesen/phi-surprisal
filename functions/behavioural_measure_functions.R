@@ -40,10 +40,10 @@ make_col_vision_transition <- function(see_block){
 add_behavioural_analysis <- function(d, task){
   #Block movement direction - 16 trials * 33 timesteps left, 16 trials * 33 timesteps right
   d$block_movement <- c(rep(-1,33*16), rep(1,33*16))
-  
+
   #Trial type - changes every 32 trials between catch and avoid
   d$trial_type <- c(rep('catch',33*16*2), rep('avoid',33*16*2))
-  
+
   #Block size 32 trials size, in task 4: 3-4-6-5, in task 1: 1-3-1-3
   if (task == 4) {
     d$block_size <- c(rep(3,33*16*2), rep(4,33*16*2), rep(6,33*16*2), rep(5,33*16*2))
@@ -86,3 +86,6 @@ add_behavioural_analysis <- function(d, task){
   
   return(d)
 }
+
+View(subset(d, agent_id = "r36a118"))
+
