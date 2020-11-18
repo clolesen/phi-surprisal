@@ -10,8 +10,14 @@ library(tidyverse)
 make_col_first_sight <- function(see_block){
   #Find the idx of the first time the agent sees the block
   idx <- detect_index(see_block, function(x) x == 1)
-  #Make a list of zeroes with a 1 at the time
-  out <- c(rep(0,idx), 1, rep(0,length(see_block)-idx-1))
+  #If the animat never sees the block
+  if (idx == 0) {
+    #Make a list of 0's
+    out = rep(0,length(see_block))
+    #Otherwise
+  } else {
+    #Make a list of zeroes with a 1 when it sees the block first
+    out <- c(rep(0,idx-1), 1, rep(0,length(see_block)-idx))}
   return(out)
 }
 
@@ -85,5 +91,11 @@ add_behavioural_analysis <- function(d, task){
       tail(animat_is_seeing, n=1) == 1 & tail(animat_follow_length, n=1) > 4, 'follow_catch', 'undefined'))
   
   return(d)
+<<<<<<< HEAD
 } 
 
+=======
+}
+
+read.csv()
+>>>>>>> 9717e652029b3829e50174ee31140b5797f904d7
