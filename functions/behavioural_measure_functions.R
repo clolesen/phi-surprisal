@@ -85,7 +85,5 @@ add_behavioural_analysis <- function(d, task){
       tail(animat_is_seeing, n=1) == 1 & tail(animat_follow_length, n=1) > 4, 'follow_catch', 'undefined'))
   
   return(d)
-}
-
-View(subset(d, agent_id = "r36a118"))
+} 
 
