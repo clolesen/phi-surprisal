@@ -1,6 +1,4 @@
 # Import general libraries
-from extract_from_MABE import extract_from_MABE
-from get_task_info import get_task_info
 import os
 import sys
 
@@ -13,7 +11,8 @@ os.chdir(dname)
 sys.path.insert(1, os.getcwd() + '/python_utils')
 
 # Import own functions
-
+from extract_from_MABE import extract_from_MABE
+from get_task_info import get_task_info
 
 # settings
 task = sys.argv[1]
