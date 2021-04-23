@@ -5,3 +5,4 @@
 raw_data/*
 processed_data/*
 python_utils/actual_agency_files/*
+*/__pycache__
