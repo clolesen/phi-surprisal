@@ -31,7 +31,3 @@ get_task_info(task=task)
 get_goal_prior_distribution(task=task)
 
 # Calculate surprisal
-
-
-
-['run','agent','trial','timestep','S1','S2','M1','M2','H1','H2','H3','H4','phi'][4:12]
