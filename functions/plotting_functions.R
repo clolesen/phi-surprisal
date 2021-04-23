@@ -2,6 +2,7 @@ library(ggplot2)
 library(data.table)
 library(ggpubr)
 library(tidyverse)
+library(egg)
 
 
 # colors used in plots
@@ -11,13 +12,13 @@ library(tidyverse)
 # 4: Green
 # 5: Yellow
 # 6: Purple
-color_palette = c("black", "#3498DB", "#E53935", "#27AE60", "#f0e442", "#490092")
-colors = scale_color_manual(values=palette)
-fills = scale_fill_manual(values=palette)
+color_palette = c("black", "#3498DB", "#E53935", "#27AE60", "#ff6700", "#490092")
+colors = scale_color_manual(values = color_palette)
+fills = scale_fill_manual(values = color_palette)
 
 
 #### AVERAGE PLOTS ####
-make_average_plot_data = function(data, variable){
+make_average_plot_data = function(data, variable, seperator){
   
   y = data[,..variable][[1]]
   
@@ -31,7 +32,7 @@ make_average_plot_data = function(data, variable){
     y = y,
     se_min = y - se,
     se_max = y + se,
-    task = data$task
+    seperator = as.factor(data[,..seperator][[1]])
   )
   
   return(plot_data)
@@ -40,38 +41,38 @@ make_average_plot_data = function(data, variable){
 LOD_plot = function(plot_data, y_label, x_label, title){
   
   plot = ggplot(plot_data, aes(x = x, y = y)) +
-    geom_ribbon(aes(ymin = se_min, ymax = se_max, fill = task), color = F, alpha = 0.1) +
-    geom_line(aes(color = task)) +
+    geom_ribbon(aes(ymin = se_min, ymax = se_max, fill = seperator), color = F, alpha = 0.1) +
+    geom_line(aes(color = seperator), size = 1) +
     theme_classic() +
-    labs(y = y_label, x = x_label, title = title, legend = "Task") +
+    labs(y = y_label, x = x_label, title = title, color = " ", fill = " ") +
     colors + fills
   
   return(plot)
 }
 
-make_LOD_plot = function(data, variable, y_label = " ", x_label = "Generation", title =" "){
+make_LOD_plot = function(data, variable, y_label = " ", x_label = "Generation", title =" ",  seperator = "task"){
   
-  plot_data = make_average_plot_data(data, variable)
+  plot_data = make_average_plot_data(data, variable, seperator)
   
   plot = LOD_plot(plot_data, y_label, x_label, title)
   
   return(plot)
 }
 
-make_surprisal_matrix_plot = function(data, cond){
+make_surprisal_matrix_plot = function(data, cond, seperator = "task"){
   
   plot = ggarrange(
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_all"), y_label = "Surprisal - All runs", x_label = " ", title = "Full system states"),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_all"), x_label = " ", title = "Blanket states"),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_all"), x_label = " ", title = "Internal states"),
+    make_LOD_plot(data, paste0("surprisal_system_",cond,"_all"), y_label = "Surprisal - All runs", x_label = " ", title = "Full system states",  seperator),
+    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_all"), x_label = " ", title = "Blanket states",  seperator = seperator),
+    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_all"), x_label = " ", title = "Internal states",  seperator = seperator),
     
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_LOD"), y_label = "Surprisal - LOD", x_label = " "),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_LOD"), x_label = " "),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_LOD"), x_label = " "),
+    make_LOD_plot(data, paste0("surprisal_system_",cond,"_LOD"), y_label = "Surprisal - LOD", x_label = " ",  seperator = seperator),
+    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_LOD"), x_label = " ", seperator = seperator),
+    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_LOD"), x_label = " ",  seperator = seperator),
     
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_animat"), y_label = "Surprisal - Animat"),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_animat")),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_animat")),
+    make_LOD_plot(data, paste0("surprisal_system_",cond,"_animat"), y_label = "Surprisal - Animat",  seperator = seperator),
+    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_animat"),  seperator = seperator),
+    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_animat"), seperator =  seperator),
     
     labels = "auto",
     common.legend = T, align = "v"
@@ -90,11 +91,29 @@ make_all_LOD_phi_plot = function(data, task){
     geom_line() +
     theme_minimal() +
     facet_wrap(~run, ncol = 5) +
-    labs(y = "Average Phi", x = "Generation", title = paste0(title,": Average Phi over time for all agents seperatly"))
+    labs(y = "Average Phi", x = "Generation", title = paste0(title,": Average Phi over time for all agents seperatly")) 
   
   return(plot)
 }
 
+make_generation_path_plot = function(data,x_variable,y_variable,x_label = " ",y_label = " ", title = " ", color_by = "generation", color_by_label = "Generation" ,facet = F){
+  
+  
+  
+  plot = ggplot(data, aes_string(x = x_variable, y = y_variable, color = color_by))+
+    #geom_smooth() +
+    geom_point(size = 0.5) +
+    theme_classic() +
+    labs(y = y_label, x = x_label, title = title, color = color_by_label) +
+    scale_color_gradient(low = "#555555", high = color_palette[2]) +
+    geom_path(size = 0.4)
+  
+  if (!(isFALSE(facet))){
+    plot = plot + facet_wrap(as.formula(facet))
+  }
+  
+  return(plot)
+}
 
 #### TIMESTEP PLOTS ####
 
@@ -102,9 +121,19 @@ make_timestep_plot_data = function(data, variables, runs, agents, trials){
   
   sub_data = subset(data, run %in% runs & agent %in% agents & trial %in% trials)
   
-  columns = c("run", "agent", "trial", "timestep", variables)
+  columns = c("run", "agent", "trial", "timestep", "block_movement", "trial_type", "block_size", variables)
   
   plot_data = sub_data[,..columns]
+  
+  #plot_data$run = paste("LOD", plot_data$run)
+  #plot_data$agent = paste("Animat", plot_data$agent)
+  #plot_data$trial = paste("Trial", plot_data$trial)
+  
+  plot_data$block_movement[plot_data$block_movement == -1] = "Left"
+  plot_data$block_movement[plot_data$block_movement == 1] = "Right"
+  
+  plot_data$trial_type[plot_data$trial_type == "catch"] = "Catch"
+  plot_data$trial_type[plot_data$trial_type == "avoid"] = "Avoid"
   
   return(plot_data)
 }
@@ -123,27 +152,17 @@ normalize_surprisal = function(plot_data){
   return(plot_data)
 }
 
-timestep_line_plot = function(plot_data, facet, variables) {
+timestep_line_plot = function(plot_data, facet, variables, line_names) {
   
-  n_columns = ncol(plot_data)
-  
-  plot = ggplot(plot_data, aes(x = timestep)) +
-    geom_segment(y =-.1, yend =-.1, x = 0, xend = 34, color = "black", size = 1) +
-    facet_wrap(as.formula(paste("~", facet)), scales = "free") +
-    theme_void() +
-    theme(
-      panel.grid.minor.x = element_line(colour = "lightgray", linetype = "dotted"),
-      strip.background = element_rect(colour = "white", fill = "#eeeeee"),
-      strip.text.x = element_text(margin = margin(3,0,3,0)),
-      panel.spacing = unit(1, "lines"),
-      plot.margin=unit(c(.5,.5,.5,.5), "cm")) +
-    scale_x_continuous(breaks = seq(1,33,1))
+  # Covert data to long format
+  plot_data = gather(plot_data, y, value, variables)
+  plot_data$y = factor(plot_data$y, levels = variables)
 
-  i = 2
-  for (var in variables){
-    plot = plot + geom_line(aes_string(y = var), color = color_palette[i], size=1)
-    i = i + 1
-  }
+  plot = ggplot(plot_data, aes(x = timestep)) +
+    geom_line(aes(y = value, color = y), size = 1.2) +
+    facet_wrap(as.formula(facet), scales = "free", ncol = 1) +
+    scale_color_manual(values = c("#ffbe3d", color_palette[5],color_palette[4]), labels = line_names) +
+    labs(color = " ", x = "Timestep", y = " ")
   
   return(plot)
 }
@@ -165,42 +184,248 @@ convert_to_tile_plot_data = function(plot_data, variables){
   return(tile_plot_data)
 }
 
-add_tile_to_timestep_plot = function(plot, plot_data, variables){
+add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
   
   tile_plot_data = convert_to_tile_plot_data(plot_data, variables)
   
   y_values = unique(tile_plot_data$y)
   
   for (value in y_values){
-    plot = plot + geom_segment(y = value, yend = value, x = -1.5, xend = 34, colour = "gray")
+    plot = plot + geom_segment(y = value, yend = value, x = 0, xend = 34, colour = "gray")
   }
   
   plot = plot + 
+    annotate("rect", xmin=0, xmax=34, ymin=min(y_values)-.15, ymax=-0.12, alpha=0.3, fill= color_palette[2]) +
     geom_vline(xintercept=c(0,34), linetype="solid", color = "black") +
-    theme(legend.position = "none", axis.text.x = element_text(size = 6), axis.text.y = element_text(size = 8)) +
-    scale_alpha_continuous(range = c(0,1)) +
-    scale_y_continuous(breaks = y_values, labels = variables, limits = c(min(y_values), 3)) +
+    geom_segment(y =-.12, yend =-.12, x = 0, xend = 34, color = "black", size = 0.5) +
+    geom_segment(y = 3.2, yend = 3.2, x = 0, xend = 34, color = "black", size = 0.5) +
+    geom_segment(y = min(y_values)-.15, yend = min(y_values)-.15, x = 0, xend = 34, color = "black", size = 0.5) +
+    theme_void() +
+    theme(
+      panel.grid.minor.x = element_line(colour = "lightgray", linetype = "dotted"),
+      #strip.background = element_rect(colour = "white", fill = "#eeeeee"),
+      strip.text.x = element_blank(), #element_text(margin = margin(3,0,3,0)),
+      panel.spacing = unit(1, "lines"),
+      plot.margin=unit(c(.5,.5,.5,.5), "cm"),
+      axis.text.x = element_text(size = 6,  margin = margin(t = -8)),
+      axis.text.y = element_text(size = 8, margin = margin(r = -20), hjust = 1)) +
+    scale_alpha_continuous(range = c(0,1), guide=FALSE) +
+    scale_y_continuous(breaks = y_values, 
+                       labels = tile_names, 
+                       limits = c(min(y_values)-0.15, 3) # -0.15 to make room for the last row
+                       ) +
+    scale_x_continuous(breaks = seq(1,33,1)) +
     geom_tile(data = tile_plot_data,
               aes(y = y, alpha = value),
-              height = .1)
+              height = .1) +
+    annotate(geom="text", x=-0.3, y=0.04, label="0 -", size=3) 
                      
   return(plot)           
 }
 
-make_timestep_plot = function(data, line_variables, tile_variables, facet, runs = 0:49, agents = 0:120, trials = 0:127){
+make_timestep_plot = function(data, line_variables, line_names, tile_variables, tile_names, facet, runs = 0:49, agents = 0:120, trials = 0:127){
   
   #LINE PLOT
   line_plot_data = make_timestep_plot_data(data, line_variables, runs, agents, trials)
   
   line_plot_data = normalize_surprisal(line_plot_data)
   
-  line_plot = timestep_line_plot(line_plot_data, facet, line_variables)
+  line_plot = timestep_line_plot(line_plot_data, facet, line_variables, line_names)
   
   # TILE PLOT
-  tile_plot_data = make_timestep_plot_data(data, tile_variables, runs, agents, trials)
+  if(is.character(tile_variables[1])){
+    
+    tile_plot_data = make_timestep_plot_data(data, tile_variables, runs, agents, trials)
+    
+    full_plot = add_tile_to_timestep_plot(line_plot, tile_plot_data, tile_variables, tile_names)
+    
+  } else {
+    full_plot = line_plot + theme_minimal()
+  }
   
-  full_plot = add_tile_to_timestep_plot(line_plot, tile_plot_data, tile_variables)
+  facet_variables = str_split(facet, "~")[[1]]
+  if (facet_variables[1]=="") facet_variables = facet_variables[2]
+  tags = 0
+  if (length(facet_variables) == 1){
+    data_list = split(line_plot_data, eval(parse(text=paste0("line_plot_data$", facet_variables))) )
+
+    i = 1
+    data_text = data.frame()
+    for (data in data_list){
+      direction = data$block_movement[1]
+      size = data$block_size[1]
+      type = data$trial_type[1]
+      agent = data$agent[1] #str_split(data$agent[1], " ")[[1]][2]
+      run = data$run[1] #str_split(data$run[1], " ")[[1]][2]
+      trial = data$trial[1] #str_split(data$trial[1], " ")[[1]][2]
+      
+      var = eval(parse(text=paste0("data$", facet_variables, "[1]")))
+      
+      row = data.frame(
+        label1 = paste("Block direction:", direction, 
+                      "\nBlock size:", size, 
+                      "\nTrial type:", type 
+                      ),
+        label2 = paste("LOD:", run+1,
+                       "\nGeneration:", agent+1,
+                       "\nTrial:", trial
+                      ),
+        var = var
+      )
+      data_text = rbind(data_text,row)
+      i = i + 1
+    }
+    
+    colnames(data_text) = c("label1", "label2", facet_variables)
+    
+    full_plot = full_plot + 
+      annotate("rect", xmin=0.5, xmax=17.75, ymin=1.9, ymax=2.9, alpha=0.6, fill= "lightgray") +
+      geom_text(
+        data    = data_text,
+        mapping = aes(x = 0.75, y = 1.2, label = label1),
+        hjust   = 0,
+        vjust   = -1
+      ) + 
+      geom_text(
+        data    = data_text,
+        mapping = aes(x = 10.75, y = 1.2, label = label2),
+        hjust   = 0,
+        vjust   = -1
+      )
+    
+  } # end if 1 facet variable
   
   return(full_plot)
 }
 
+#
+
+#### TIME SERIES PLOTS ####
+
+time_series_plot_data = function(data, range, runs, agents, trials, fitness_groups){
+  
+  
+  plot_data = subset(data,
+                     lag %in% range &
+                     run %in% runs &
+                      agent %in% agents &
+                       trial %in% trial
+                     )
+  
+  if (is.list(fitness_groups)){
+    plot_data$fitness_groups = 0
+    
+    for (i in 1:length(fitness_groups)){
+      plot_data$fitness_groups[plot_data$run %in% fitness_groups[[i]]] = i
+    }
+  }
+  
+  return(plot_data)
+}
+
+add_agent_groups = function(data) {
+  data$agent_groups = 0
+  intervals = seq(25,120,24)
+  for (i in 1:4){
+    group = intervals[i]:(intervals[i]+23)
+    data$agent_groups[data$agent %in% group] = i
+  }
+  return(data)
+}
+
+time_series_plot = function(data, seperator){
+  
+  if(isFALSE(seperator)){
+    density = geom_density()
+  } else {
+    data$seperator = as.factor(data[,..seperator][[1]])
+    density = geom_density(aes(color = seperator, fill = seperator), size = 1, alpha = .3)
+  }
+  
+  plot = ggplot(data, aes(x = cor)) +
+    facet_wrap(~lag) +
+    theme_minimal() +
+    #theme(legend.position = "none") +
+    geom_vline(xintercept=0) + 
+    labs(y = " ", x = "Correlation coeficient", color = " ", fill = " ") +
+    xlim(c(-1,1)) +
+    density + colors + fills
+  
+  return(plot)
+}
+
+make_time_series_plot = function(data, range = -6:5, seperator = F, runs = 0:49, agents = 0:120, trials = 0:127, fitness_groups = F) {
+  
+  plot_data = time_series_plot_data(data, range, runs, agents, trials, fitness_groups)
+  
+  if (seperator == "agent_groups") {
+    plot_data = add_agent_groups(plot_data)
+  }
+  
+  plot = time_series_plot(plot_data, seperator)
+  
+  
+  return(plot)
+}
+
+get_fitness_groups = function(data, fitness_data, group_by, group_sizes) {
+  if (group_by == "mean") {
+    mean_list = c()
+    for (r in 0:49){
+      fitness = subset(fitness_data, run == r)$fitness  
+      mean_list[r+1] = mean(fitness)
+    }
+    
+    ordered_list = cbind(mean_list, 0:49)[order(mean_list),2]
+    
+  } else if (group_by == "end") {
+    # USing end fitness values
+    end_list = c()
+    for (r in 0:49){
+      fitness = subset(fitness_data, run == r & agent == 120)$fitness
+      end_list[r+1] = fitness
+    }
+    
+    ordered_list = cbind(end_list, 0:49)[order(end_list),2]
+    
+  } else if (group_by == "random"){
+    ordered_list = sample(0:49, 50)
+  }
+  
+  # Empty list 
+  data_list = list()
+  
+  # Fill fitness group column
+  i = 1
+  for(level in 1:length(group_sizes)){
+    runs = ordered_list[i:(i-1 + group_sizes[level])]
+    data_list[[level]] = runs
+    i = i + group_sizes[level]
+  }
+  
+  return(data_list)
+}
+
+time_series_surprisal_generation_plot = function(data){
+  
+  plot = ggplot(data, aes(x = x, y = y)) +
+    geom_ribbon(aes(ymin = se_min, ymax = se_max), color = F, alpha = 0.1) +
+    geom_line(size = 1) +
+    theme_classic() +
+    facet_wrap(~run)
+    labs(y = "Mean surprisal correlations", x = "Generation", title = " ", color = " ", fill = " ") +
+    colors + fills
+  
+  return(plot)
+}
+
+time_series_surprisal_phi_plot = function(data){
+  
+  plot = ggplot(data, aes(x = surprisal_correlation, y = Phi_mean)) +
+    geom_point() +
+    theme_classic() +
+    labs(y = "Average Phi", x = "Average surprisal correlations", title = " ", color = " ", fill = " ") +
+    colors + fills
+  
+  return(plot)
+}

@@ -3,8 +3,8 @@ average_timestep_data = function(data) {
   i = 1
   sum_data_list = list()
   
-  runs = order(unique(data$run))
-  agents = order(unique(data$agent))
+  runs = unique(data$run)
+  agents = unique(data$agent)
   
   for (r in runs) {
     for (a in agents){
@@ -135,7 +135,6 @@ average_timestep_data = function(data) {
   return(sum_data)
 }
 
-
 smoothing_average_data = function(data, window_size = 6){
   
   #Make empty list for filling in the data
@@ -156,7 +155,7 @@ smoothing_average_data = function(data, window_size = 6){
     
     #Go through each row and all columns except the last 2 (task and generation)
     for (r in 1:nrow(df_sub)){
-      for (c in 4:(ncol(df_sub))){
+      for (c in 3:(ncol(df_sub))){
         
         #For those data points above the window size
         if (r>window_size){
@@ -172,7 +171,7 @@ smoothing_average_data = function(data, window_size = 6){
         }
         
         #Also save the task and generation data
-        df_sub_smooth[r, 1:3] = df_sub[r, 1:3]
+        df_sub_smooth[r, 1:2] = df_sub[r, 1:2]
       }
     }
     #Add the sub-data frame to the output
@@ -187,12 +186,11 @@ smoothing_average_data = function(data, window_size = 6){
   return(smoothed_data)
 }
 
-
-
-average_across_LODs <- function(averaged_data, fitness_data, task) {
+average_across_LODs = function(averaged_data, fitness_data, task) {
   
-  agents = order(unique(averaged_data$agent))
-  print(agents)
+  agents = unique(averaged_data$agent)
+  agents = agents[order(agents)]
+
   data_list = list()
   i = 1
   
@@ -321,5 +319,68 @@ average_across_LODs <- function(averaged_data, fitness_data, task) {
   
   return(averaged_LOD_data)
   
+}
+
+add_fitness_groups = function(data, fitness_data, group_by, group_sizes){
+  
+  # Using mean fitness values
+  if (group_by == "mean") {
+    mean_list = c()
+    for (r in 0:49){
+      fitness = subset(fitness_data, run == r)$fitness  
+      mean_list[r+1] = mean(fitness)
+    }
+    
+    ordered_list = cbind(mean_list, 0:49)[order(mean_list),2]
+    
+  } else if (group_by == "end") {
+    # USing end fitness values
+    end_list = c()
+    for (r in 0:49){
+      fitness = subset(fitness_data, run == r & agent == 120)$fitness
+      end_list[r+1] = fitness
+    }
+    
+    ordered_list = cbind(end_list, 0:49)[order(end_list),2]
+    
+  } else if (group_by == "random"){
+    ordered_list = sample(0:49, 50)
+  }
+ 
+  # Empty column 
+  data$fitness_group = 0
+  
+  # Fill fitness group column
+  i = 1
+  for(level in 1:length(group_sizes)){
+    runs = ordered_list[i:(i-1 + group_sizes[level])]
+    data$fitness_group[data$run %in% runs] = level
+    i = i + group_sizes[level]
+  }
+  
+  return(data)
+}
+
+average_across_LODs_by_fitness_group = function(averaged_data, fitness_data, task, group_by, group_sizes = rep(10,5)){
+  
+  averaged_data = add_fitness_groups(averaged_data, fitness_data, group_by, group_sizes)
+
+  split_data = split(averaged_data, averaged_data$fitness_group)
+
+  LOD_data_list = list()
+  i = 1
+  for(split in split_data){
+    runs = unique(split$run)
+    fitness_group = unique(split$fitness_group)
+    fitness_split = subset(fitness_data, run %in% runs)
+    LOD_data = average_across_LODs(split, fitness_split, task)
+    LOD_data$fitness_group = fitness_group
+    LOD_data_list[[i]] = LOD_data
+    i = i + 1
+  }
+  
+  output_data = do.call(rbind, LOD_data_list)
+  
+  return(output_data)
 }
 

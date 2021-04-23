@@ -60,10 +60,11 @@ add_behavioural_analysis <- function(d, task){
   #Movement direction
   d$animat_movement <- d$M1 - d$M2 #-1 is left, 1 is right
   
+  #Is the animat moving
+  d$animat_is_moving <- abs(d$animat_movement)
+  
   #Does the animat see the block
   d$animat_is_seeing <- ifelse(d$S1==1 | d$S2==1, 1, 0)
-
-  #When does the animat transition between seeing and not seeing the block?
   
   #Animat is following if it is moving the same direction as the block
   d$animat_follow <- ifelse(d$animat_movement==d$block_movement, 1, 0)
@@ -91,11 +92,4 @@ add_behavioural_analysis <- function(d, task){
       tail(animat_is_seeing, n=1) == 1 & tail(animat_follow_length, n=1) > 4, 'follow_catch', 'undefined'))
   
   return(d)
-<<<<<<< HEAD
-} 
-
-=======
 }
-
-read.csv()
->>>>>>> 9717e652029b3829e50174ee31140b5797f904d7
