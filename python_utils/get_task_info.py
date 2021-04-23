@@ -27,5 +27,6 @@ def get_task_info(task):
     data_timestep['task_type'] = np.resize(task_type, data_timestep.shape[0])
     data_timestep['block_size'] = np.resize(block_size, data_timestep.shape[0])
 
+    #Save the csv
     data_timestep.to_csv(
-        'processed_data/timestep_data_task{}_info.csv'.format(task))
+        'processed_data/timestep_data_task{}_info.csv'.format(task), index=False)
