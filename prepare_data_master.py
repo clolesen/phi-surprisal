@@ -4,11 +4,16 @@ from get_task_info import get_task_info
 import os
 import sys
 
-
 # Set the working directory to the folder containing the file
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
+
+# Append utility folder path to import paths
+sys.path.insert(1, os.getcwd() + '/python_utils')
+
+# Import own functions
+
 
 # settings
 task = sys.argv[1]
