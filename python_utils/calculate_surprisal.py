@@ -10,7 +10,7 @@ if __name__ == "__main__":
     task = 4
 
 
-def get_goal_prior_distribution(task=4):
+def calculate_surprisal(task=4):
 
     #Read fitness datafile
     data_fitness = pd.read_csv('raw_data/fitness_task{}.csv'.format(task))

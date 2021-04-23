@@ -13,7 +13,7 @@ sys.path.insert(1, os.getcwd() + '/python_utils')
 # Import own functions
 from extract_from_MABE import extract_from_MABE
 from get_task_info import get_task_info
-from get_goal_prior_distribution import get_goal_prior_distribution
+from calculate_surprisal import calculate_surprisal
 
 # settings
 task = sys.argv[1]
@@ -28,6 +28,6 @@ get_task_info(task=task)
 # Caluclate Phi
 
 # Calculate goal prior distribution
-get_goal_prior_distribution(task=task)
+calculate_surprisal(task=task)
 
 # Calculate surprisal
