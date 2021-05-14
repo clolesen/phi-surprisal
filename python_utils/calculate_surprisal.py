@@ -42,7 +42,7 @@ def calculate_surprisal(task=4):
     goal_prior_surprisal = counts.groupby(['run', 'timestep', 'task_type', 'block_movement']).apply(lambda x: - np.log(x / float(x.sum())) ).reset_index()
 
     #Save the distribution for later plotting 
-    goal_prior_surprisal.to_pickle('goal_prior_distribution.pkl')
+    goal_prior_surprisal.to_pickle('processed_data/goal_prior_distribution.pkl')
 
     #-- calculate suprisal --#
     #Make empty dataframe for populating
