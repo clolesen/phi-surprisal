@@ -28,7 +28,7 @@ make_average_plot_data = function(data, variable, seperator){
   
   
   plot_data = data.table(
-    x = data$generation,
+    x = data$generation * 500,
     y = y,
     se_min = y - se,
     se_max = y + se,
@@ -121,7 +121,7 @@ make_timestep_plot_data = function(data, variables, runs, agents, trials){
   
   sub_data = subset(data, run %in% runs & agent %in% agents & trial %in% trials)
   
-  columns = c("run", "agent", "trial", "timestep", "block_movement", "trial_type", "block_size", variables)
+  columns = c("run", "agent", "trial", "timestep", "block_movement", "task_type", "block_size", variables)
   
   plot_data = sub_data[,..columns]
   
@@ -132,8 +132,8 @@ make_timestep_plot_data = function(data, variables, runs, agents, trials){
   plot_data$block_movement[plot_data$block_movement == -1] = "Left"
   plot_data$block_movement[plot_data$block_movement == 1] = "Right"
   
-  plot_data$trial_type[plot_data$trial_type == "catch"] = "Catch"
-  plot_data$trial_type[plot_data$trial_type == "avoid"] = "Avoid"
+  plot_data$task_type[plot_data$task_type == "catch"] = "Catch"
+  plot_data$task_type[plot_data$task_type == "avoid"] = "Avoid"
   
   return(plot_data)
 }
@@ -142,11 +142,11 @@ normalize_surprisal = function(plot_data){
   
   n_columns = ncol(plot_data)
   
-  # check for surprisal columns and divide them by 10
+  # check for surprisal columns and normalize
   for (column in 5:n_columns){
     name = names(plot_data[,..column]) 
     split_name = strsplit(name, "_")[[1]]
-    if (split_name[1] == "surprisal") plot_data[,column] = plot_data[,..column]/5
+    if (split_name[1] == "surprisal") plot_data[,column] = plot_data[,..column]/2
   }
   
   return(plot_data)
@@ -161,7 +161,7 @@ timestep_line_plot = function(plot_data, facet, variables, line_names) {
   plot = ggplot(plot_data, aes(x = timestep)) +
     geom_line(aes(y = value, color = y), size = 1.2) +
     facet_wrap(as.formula(facet), scales = "free", ncol = 1) +
-    scale_color_manual(values = c("#ffbe3d", color_palette[5],color_palette[4]), labels = line_names) +
+    scale_color_manual(values = c(color_palette[5],color_palette[4]), labels = line_names) +
     labs(color = " ", x = "Timestep", y = " ")
   
   return(plot)
@@ -223,7 +223,7 @@ add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
   return(plot)           
 }
 
-make_timestep_plot = function(data, line_variables, line_names, tile_variables, tile_names, facet, runs = 0:49, agents = 0:120, trials = 0:127){
+make_timestep_plot = function(data, fitness_data, line_variables, line_names, tile_variables, tile_names, facet, runs = 0:49, agents = 0:120, trials = 0:127){
   
   #LINE PLOT
   line_plot_data = make_timestep_plot_data(data, line_variables, runs, agents, trials)
@@ -248,27 +248,31 @@ make_timestep_plot = function(data, line_variables, line_names, tile_variables, 
   tags = 0
   if (length(facet_variables) == 1){
     data_list = split(line_plot_data, eval(parse(text=paste0("line_plot_data$", facet_variables))) )
-
+    
     i = 1
     data_text = data.frame()
     for (data in data_list){
       direction = data$block_movement[1]
       size = data$block_size[1]
-      type = data$trial_type[1]
+      type = data$task_type[1]
       agent = data$agent[1] #str_split(data$agent[1], " ")[[1]][2]
       run = data$run[1] #str_split(data$run[1], " ")[[1]][2]
       trial = data$trial[1] #str_split(data$trial[1], " ")[[1]][2]
+      LOD_fitness = round(subset(fitness_data, agent==120 & run==data$run[1])$fitness, 2)
+      animat_fitness = round(subset(fitness_data, agent==data$agent[1] & run==data$run[1])$fitness, 2)
       
       var = eval(parse(text=paste0("data$", facet_variables, "[1]")))
       
       row = data.frame(
-        label1 = paste("Block direction:", direction, 
-                      "\nBlock size:", size, 
-                      "\nTrial type:", type 
-                      ),
+        label1 = paste("Trial:", trial,
+                       "\nTrial type:", type,
+                       "\nBlock direction:", direction, 
+                       "\nBlock size:", size
+        ),
         label2 = paste("LOD:", run+1,
-                       "\nGeneration:", agent+1,
-                       "\nTrial:", trial
+                       "\nGeneration:", agent*500,
+                       "\nAnimat fitness:", animat_fitness,
+                       "\nEnd of LOD fitness:", LOD_fitness
                       ),
         var = var
       )
@@ -279,16 +283,16 @@ make_timestep_plot = function(data, line_variables, line_names, tile_variables, 
     colnames(data_text) = c("label1", "label2", facet_variables)
     
     full_plot = full_plot + 
-      annotate("rect", xmin=0.5, xmax=17.75, ymin=1.9, ymax=2.9, alpha=0.6, fill= "lightgray") +
+      annotate("rect", xmin=0.5, xmax=21.3, ymin=1.6, ymax=3, alpha=0.4, fill= "lightgray") +
       geom_text(
         data    = data_text,
-        mapping = aes(x = 0.75, y = 1.2, label = label1),
+        mapping = aes(x = 0.75, y = 0.6, label = label1),
         hjust   = 0,
         vjust   = -1
       ) + 
       geom_text(
         data    = data_text,
-        mapping = aes(x = 10.75, y = 1.2, label = label2),
+        mapping = aes(x = 10.75, y = 0.6, label = label2),
         hjust   = 0,
         vjust   = -1
       )

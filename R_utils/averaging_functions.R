@@ -28,90 +28,8 @@ average_timestep_data = function(data) {
                                       n_concepts_mean = mean(d$n_concepts), n_concepts_max = max(d$n_concepts),
                                       concept_phi_mean = mean(ConPhi_list), concept_phi_max = max(ConPhi_list),
                                       
-                                      # Surprisal relative to all states
-                                      surprisal_system_uncond_all_mean = mean(d$surprisal_system_uncond_all),
-                                      surprisal_system_uncond_all_max = max(d$surprisal_system_uncond_all),
-                                      
-                                      surprisal_system_cond1_all_mean = mean(d$surprisal_system_cond1_all),
-                                      surprisal_system_cond1_all_max = max(d$surprisal_system_cond1_all),
-                                      
-                                      surprisal_system_cond2_all_mean = mean(d$surprisal_system_cond2_all),
-                                      surprisal_system_cond2_all_max = max(d$surprisal_system_cond2_all),
-                                      
-                                      surprisal_blanket_uncond_all_mean = mean(d$surprisal_blanket_uncond_all),
-                                      surprisal_blanket_uncond_all_max = max(d$surprisal_blanket_uncond_all),
-                                      
-                                      surprisal_blanket_cond1_all_mean = mean(d$surprisal_blanket_cond1_all),
-                                      surprisal_blanket_cond1_all_max = max(d$surprisal_blanket_cond1_all),
-                                      
-                                      surprisal_blanket_cond2_all_mean = mean(d$surprisal_blanket_cond2_all),
-                                      surprisal_blanket_cond2_all_max = max(d$surprisal_blanket_cond2_all),
-                                      
-                                      surprisal_internal_uncond_all_mean = mean(d$surprisal_internal_uncond_all),
-                                      surprisal_internal_uncond_all_max = max(d$surprisal_internal_uncond_all),
-                                      
-                                      surprisal_internal_cond1_all_mean = mean(d$surprisal_internal_cond1_all),
-                                      surprisal_internal_cond1_all_max = max(d$surprisal_internal_cond1_all),
-                                      
-                                      surprisal_internal_cond2_all_mean = mean(d$surprisal_internal_cond2_all),
-                                      surprisal_internal_cond2_all_max = max(d$surprisal_internal_cond2_all),
-                                      
-                                      # Surprisal relative to LOD states
-                                      surprisal_system_uncond_LOD_mean = mean(d$surprisal_system_uncond_LOD),
-                                      surprisal_system_uncond_LOD_max = max(d$surprisal_system_uncond_LOD),
-                                      
-                                      surprisal_system_cond1_LOD_mean = mean(d$surprisal_system_cond1_LOD),
-                                      surprisal_system_cond1_LOD_max = max(d$surprisal_system_cond1_LOD),
-                                      
-                                      surprisal_system_cond2_LOD_mean = mean(d$surprisal_system_cond2_LOD),
-                                      surprisal_system_cond2_LOD_max = max(d$surprisal_system_cond2_LOD),
-                                      
-                                      surprisal_blanket_uncond_LOD_mean = mean(d$surprisal_blanket_uncond_LOD),
-                                      surprisal_blanket_uncond_LOD_max = max(d$surprisal_blanket_uncond_LOD),
-                                      
-                                      surprisal_blanket_cond1_LOD_mean = mean(d$surprisal_blanket_cond1_LOD),
-                                      surprisal_blanket_cond1_LOD_max = max(d$surprisal_blanket_cond1_LOD),
-                                      
-                                      surprisal_blanket_cond2_LOD_mean = mean(d$surprisal_blanket_cond2_LOD),
-                                      surprisal_blanket_cond2_LOD_max = max(d$surprisal_blanket_cond2_LOD),
-                                      
-                                      surprisal_internal_uncond_LOD_mean = mean(d$surprisal_internal_uncond_LOD),
-                                      surprisal_internal_uncond_LOD_max = max(d$surprisal_internal_uncond_LOD),
-                                      
-                                      surprisal_internal_cond1_LOD_mean = mean(d$surprisal_internal_cond1_LOD),
-                                      surprisal_internal_cond1_LOD_max = max(d$surprisal_internal_cond1_LOD),
-                                      
-                                      surprisal_internal_cond2_LOD_mean = mean(d$surprisal_internal_cond2_LOD),
-                                      surprisal_internal_cond2_LOD_max = max(d$surprisal_internal_cond2_LOD),
-                                      
-                                      
-                                      # Surprisal relative to animat states
-                                      surprisal_system_uncond_animat_mean = mean(d$surprisal_system_uncond_animat),
-                                      surprisal_system_uncond_animat_max = max(d$surprisal_system_uncond_animat),
-                                      
-                                      surprisal_system_cond1_animat_mean = mean(d$surprisal_system_cond1_animat),
-                                      surprisal_system_cond1_animat_max = max(d$surprisal_system_cond1_animat),
-                                      
-                                      surprisal_system_cond2_animat_mean = mean(d$surprisal_system_cond2_animat),
-                                      surprisal_system_cond2_animat_max = max(d$surprisal_system_cond2_animat),
-                                      
-                                      surprisal_blanket_uncond_animat_mean = mean(d$surprisal_blanket_uncond_animat),
-                                      surprisal_blanket_uncond_animat_max = max(d$surprisal_blanket_uncond_animat),
-                                      
-                                      surprisal_blanket_cond1_animat_mean = mean(d$surprisal_blanket_cond1_animat),
-                                      surprisal_blanket_cond1_animat_max = max(d$surprisal_blanket_cond1_animat),
-                                      
-                                      surprisal_blanket_cond2_animat_mean = mean(d$surprisal_blanket_cond2_animat),
-                                      surprisal_blanket_cond2_animat_max = max(d$surprisal_blanket_cond2_animat),
-                                      
-                                      surprisal_internal_uncond_animat_mean = mean(d$surprisal_internal_uncond_animat),
-                                      surprisal_internal_uncond_animat_max = max(d$surprisal_internal_uncond_animat),
-                                      
-                                      surprisal_internal_cond1_animat_mean = mean(d$surprisal_internal_cond1_animat),
-                                      surprisal_internal_cond1_animat_max = max(d$surprisal_internal_cond1_animat),
-                                      
-                                      surprisal_internal_cond2_animat_mean = mean(d$surprisal_internal_cond2_animat),
-                                      surprisal_internal_cond2_animat_max = max(d$surprisal_internal_cond2_animat)
+                                      surprisal_mean = mean(d$surprisal),
+                                      surprisal_max = max(d$surprisal)
                                       
                                       
       )
@@ -213,7 +131,7 @@ average_across_LODs = function(averaged_data, fitness_data, task) {
       fitness = mean(fitness_data[fitness_data$agent==a,]$fitness),
       fitness_se = sd(fitness_data[fitness_data$agent==a,]$fitness)/square_root_of_n,
       
-      #Summarize IIT measures
+      #Summarize
       Phi = mean(d$Phi_mean),
       Phi_se = sd(d$Phi_mean)/square_root_of_n,
       Phi_max = mean(d$Phi_max),
@@ -224,90 +142,10 @@ average_across_LODs = function(averaged_data, fitness_data, task) {
       n_concepts_max = mean(d$n_concepts_max),
       n_concepts_max_se = sd(d$n_concepts_max)/square_root_of_n,
       
-      # Surprisal relative to all states
-      surprisal_system_uncond_all = mean(d$surprisal_system_uncond_all_mean),
-      surprisal_system_uncond_all_se = sd(d$surprisal_system_uncond_all_mean)/square_root_of_n,
-      
-      surprisal_system_cond1_all = mean(d$surprisal_system_cond1_all_mean),
-      surprisal_system_cond1_all_se = sd(d$surprisal_system_cond1_all_mean)/square_root_of_n,
-      
-      surprisal_system_cond2_all = mean(d$surprisal_system_cond2_all_mean),
-      surprisal_system_cond2_all_se = sd(d$surprisal_system_cond2_all_mean)/square_root_of_n,
-      
-      surprisal_blanket_uncond_all = mean(d$surprisal_blanket_uncond_all_mean),
-      surprisal_blanket_uncond_all_se = sd(d$surprisal_blanket_uncond_all_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond1_all = mean(d$surprisal_blanket_cond1_all_mean),
-      surprisal_blanket_cond1_all_se = sd(d$surprisal_blanket_cond1_all_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond2_all = mean(d$surprisal_blanket_cond2_all_mean),
-      surprisal_blanket_cond2_all_se = sd(d$surprisal_blanket_cond2_all_mean)/square_root_of_n,
-      
-      surprisal_internal_uncond_all = mean(d$surprisal_internal_uncond_all_mean),
-      surprisal_internal_uncond_all_se = sd(d$surprisal_internal_uncond_all_mean)/square_root_of_n,
-      
-      surprisal_internal_cond1_all = mean(d$surprisal_internal_cond1_all_mean),
-      surprisal_internal_cond1_all_se = sd(d$surprisal_internal_cond1_all_mean)/square_root_of_n,
-      
-      surprisal_internal_cond2_all = mean(d$surprisal_internal_cond2_all_mean),
-      surprisal_internal_cond2_all_se = sd(d$surprisal_internal_cond2_all_mean)/square_root_of_n,
-      
-      # Surprisal relative to LOD states
-      surprisal_system_uncond_LOD = mean(d$surprisal_system_uncond_LOD_mean),
-      surprisal_system_uncond_LOD_se = sd(d$surprisal_system_uncond_LOD_mean)/square_root_of_n,
-      
-      surprisal_system_cond1_LOD = mean(d$surprisal_system_cond1_LOD_mean),
-      surprisal_system_cond1_LOD_se = sd(d$surprisal_system_cond1_LOD_mean)/square_root_of_n,
-      
-      surprisal_system_cond2_LOD = mean(d$surprisal_system_cond2_LOD_mean),
-      surprisal_system_cond2_LOD_se = sd(d$surprisal_system_cond2_LOD_mean)/square_root_of_n,
-      
-      surprisal_blanket_uncond_LOD = mean(d$surprisal_blanket_uncond_LOD_mean),
-      surprisal_blanket_uncond_LOD_se = sd(d$surprisal_blanket_uncond_LOD_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond1_LOD = mean(d$surprisal_blanket_cond1_LOD_mean),
-      surprisal_blanket_cond1_LOD_se = sd(d$surprisal_blanket_cond1_LOD_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond2_LOD = mean(d$surprisal_blanket_cond2_LOD_mean),
-      surprisal_blanket_cond2_LOD_se = sd(d$surprisal_blanket_cond2_LOD_mean)/square_root_of_n,
-      
-      surprisal_internal_uncond_LOD = mean(d$surprisal_internal_uncond_LOD_mean),
-      surprisal_internal_uncond_LOD_se = sd(d$surprisal_internal_uncond_LOD_mean)/square_root_of_n,
-      
-      surprisal_internal_cond1_LOD = mean(d$surprisal_internal_cond1_LOD_mean),
-      surprisal_internal_cond1_LOD_se = sd(d$surprisal_internal_cond1_LOD_mean)/square_root_of_n,
-      
-      surprisal_internal_cond2_LOD = mean(d$surprisal_internal_cond2_LOD_mean),
-      surprisal_internal_cond2_LOD_se = sd(d$surprisal_internal_cond2_LOD_mean)/square_root_of_n,
-      
-      
-      # Surprisal relative to animat states
-      surprisal_system_uncond_animat = mean(d$surprisal_system_uncond_animat_mean),
-      surprisal_system_uncond_animat_se = sd(d$surprisal_system_uncond_animat_mean)/square_root_of_n,
-      
-      surprisal_system_cond1_animat = mean(d$surprisal_system_cond1_animat_mean),
-      surprisal_system_cond1_animat_se = sd(d$surprisal_system_cond1_animat_mean)/square_root_of_n,
-      
-      surprisal_system_cond2_animat = mean(d$surprisal_system_cond2_animat_mean),
-      surprisal_system_cond2_animat_se = sd(d$surprisal_system_cond2_animat_mean)/square_root_of_n,
-      
-      surprisal_blanket_uncond_animat = mean(d$surprisal_blanket_uncond_animat_mean),
-      surprisal_blanket_uncond_animat_se = sd(d$surprisal_blanket_uncond_animat_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond1_animat = mean(d$surprisal_blanket_cond1_animat_mean),
-      surprisal_blanket_cond1_animat_se = sd(d$surprisal_blanket_cond1_animat_mean)/square_root_of_n,
-      
-      surprisal_blanket_cond2_animat = mean(d$surprisal_blanket_cond2_animat_mean),
-      surprisal_blanket_cond2_animat_se = sd(d$surprisal_blanket_cond2_animat_mean)/square_root_of_n,
-      
-      surprisal_internal_uncond_animat = mean(d$surprisal_internal_uncond_animat_mean),
-      surprisal_internal_uncond_animat_se = sd(d$surprisal_internal_uncond_animat_mean)/square_root_of_n,
-      
-      surprisal_internal_cond1_animat = mean(d$surprisal_internal_cond1_animat_mean),
-      surprisal_internal_cond1_animat_se = sd(d$surprisal_internal_cond1_animat_mean)/square_root_of_n,
-      
-      surprisal_internal_cond2_animat = mean(d$surprisal_internal_cond2_animat_mean),
-      surprisal_internal_cond2_animat_se = sd(d$surprisal_internal_cond2_animat_mean)/square_root_of_n
+      surprisal = mean(d$surprisal_mean),
+      surprisal_se = sd(d$surprisal_mean)/square_root_of_n,
+      surprisal_max = mean(d$surprisal_max),
+      surprisal_max_se = sd(d$surprisal_max)/square_root_of_n
     )
     
     i = i + 1

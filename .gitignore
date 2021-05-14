@@ -4,5 +4,5 @@
 .Ruserdata
 raw_data/*
 processed_data/*
-python_utils/actual_agency_files/*
+python_utils/actual_agency/*
 */__pycache__

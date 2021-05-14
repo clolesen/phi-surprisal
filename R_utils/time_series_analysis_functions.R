@@ -8,7 +8,9 @@ time_series <- function(d, n_lags=16, base_variable, lag_variable){
   
   #Subset the data with the chosen variables
   eval(parse(text = paste0(
-    "d = select(d, agent_id, run, agent, trial, ", lag_variable, ", ", base_variable,")")))
+    "d = select(d, run, agent, trial, ", lag_variable, ", ", base_variable,")")))
+  
+  d$agent_id <- paste("r",d$run,"a", d$agent, sep="")
   
   #Make empty array for populating with results
   result_correlations = array(NA, c(length(d$agent_id)*n_lags, 5))
