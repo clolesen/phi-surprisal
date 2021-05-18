@@ -6,3 +6,5 @@ raw_data/*
 processed_data/*
 python_utils/actual_agency/*
 */__pycache__
+settings.json
+.DS_Store

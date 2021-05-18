@@ -22,7 +22,6 @@ def calculate_surprisal(task=4):
     #Read data
     #timestep_data = pd.read_csv('processed_data/timestep_data_task{}_info.csv'.format(task))
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task)) #temp
-    #timestep_data = timestep_data.drop(['sensory_state', 'surprisal', 'Phi', 'n_concepts', 'concept_phis'], axis = 1)
     timestep_data = timestep_data.drop(['sensory_state', 'surprisal'], axis = 1)
 
     #Create sensory state and context state
@@ -50,7 +49,8 @@ def calculate_surprisal(task=4):
     timestep_data_surprisal['surprisal'] = None
 
     #Go through each generation (agent) in each simulation / LOD (run)
-    for run in range(data_fitness['run'].max()):
+    for run in range(data_fitness['run'].max()+1):
+        print(run)
         for agent in range(data_fitness['agent'].max()):
             
             #Reset the counter for minimum surprisal
