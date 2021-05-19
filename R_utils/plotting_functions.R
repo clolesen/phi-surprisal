@@ -4,6 +4,7 @@ library(ggpubr)
 library(tidyverse)
 library(egg)
 library(plyr)
+library(scales)
 
 # colors used in plots
 # 1: Black
@@ -440,12 +441,19 @@ make_sub_goal_prior_plot = function(data){
   
   title = data$split_column[1]
   
-  plot = ggplot(data, aes(x = timestep, y = sensory_state, fill = percentage)) +
+  plot = ggplot(data, aes(x = as.factor(timestep), y = sensory_state, fill = Probability)) +
     geom_tile() +
     facet_grid(run ~ .) +
     labs(title = title, x = " ", y = " ") +
     theme_pubclean() +
-    scale_fill_gradient2(low = color_palette[4], high = color_palette[5], mid = "white", midpoint = .5)
+    scale_fill_gradientn(colors = c(color_palette[4], "white", color_palette[5], color_palette[6]),
+                         values=rescale(c(0,0.25,0.75,1)),
+                         limits=c(0,1)
+                         ) + 
+    theme(axis.text.y = element_text(size = 8),
+          axis.text.x = element_text(size = 8),
+          strip.background =element_rect(fill="white")
+          )
   
   return(plot)
 }
@@ -457,7 +465,7 @@ make_goal_prior_plot_data = function(data){
   
   data$run = paste("LOD:", data$run)
   
-  data$percentage = exp(data$surprisal * -1)
+  data$Probability = exp(data$surprisal * -1)
   
   data$split_column = paste(data$task_type, "/", data$block_movement)
   
