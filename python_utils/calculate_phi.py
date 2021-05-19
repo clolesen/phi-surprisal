@@ -31,7 +31,7 @@ def calculate_phi(task):
     out_writer = csv.writer(out_file)
 
     last_agent_id = "nobody"
-    with open("processed_data/timestep_data_task{}_surprise.csv".format(task), "r") as data:
+    with open("processed_data/timestep_data_task{}.csv".format(task), "r") as data:
         data_reader = csv.reader(data)
 
         # Write the column names
