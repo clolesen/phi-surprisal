@@ -1,6 +1,6 @@
 library(data.table)
-source("functions/generate_data_files_functions.R")
-source("functions/time_series_analysis_functions.R")
+source("R_utils/generate_data_files_functions.R")
+source("R_utils/time_series_analysis_functions.R")
 
 generate_task_files(task = 1)
 generate_task_files(task = 4)
@@ -9,8 +9,8 @@ generate_task_files(task = 4)
 generate_full_average_file()
 
 # Make cross correlation between surprisal and Phi
-timestep_data_task4 = fread("data/timestep_data_task4.csv")
+timestep_data_task4 = fread("processed_data/timestep_data_task4.csv")
 time_series_surprisal_Phi = time_series(timestep_data_task4, 16, base_variable = "surprisal", lag_variable = "Phi")
-fwrite(time_series_surprisal_Phi, "data/time_series_surprisal_Phi.csv")
+fwrite(time_series_surprisal_Phi, "processed_data/time_series_surprisal_Phi.csv")
 
 

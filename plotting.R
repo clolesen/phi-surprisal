@@ -1,50 +1,35 @@
 library(data.table)
-source("functions/plotting_functions.R")
+source("R_utils/plotting_functions.R")
 
 #### DATA ####
-
-# Task 1
-LOD_data_task1 = fread("data/no_exclusion/LOD_smoothed_data_task1.csv")
-average_data_task1 = fread("data/no_exclusion/average_data_task1.csv")
-timestep_data_task1 = fread("data/timestep_data_task1.csv")
-time_series_data_task1 = fread("data/no_exclusion/time_series_data_task1/time_series_internal_cond1_LOD.csv")
-
-fitness_task1 = fread("data/fitness_task1.csv")
-
-# Task 4
-LOD_data_task4 = fread("data/no_exclusion/LOD_smoothed_data_task4.csv")
-average_data_task4 = fread("data/no_exclusion/average_data_task4.csv")
-timestep_data_task4 = fread("data/timestep_data_task4.csv")
-time_series_data_task4 = fread("data/no_exclusion/time_series_data_task4/time_series_internal_cond1_LOD.csv")
-
-fitness_group_data_task4 = fread("data/no_exclusion/LOD_fitness_group_end_task4.csv")
-
-time_series_surprisal = fread("data/average_surprisal_time_series_data.csv")
-
-fitness_task4 = fread("data/fitness_task4.csv")
-
+timestep_data_task4 = fread("processed_data/timestep_data_task4.csv")
+time_series_data = fread("processed_data/time_series_surprisal_Phi.csv")
 # Combined data
-LOD_data = fread("data/LOD_data.csv")
+averaged_data = fread("processed_data/full_average_data.csv")
 
-time_series_data_task1$task = "Task 1"
-time_series_data_task4$task = "Task 4"
-time_series_data = rbind(time_series_data_task1,time_series_data_task4)
+# Goal priors
+goal_prior_task1 = fread("goal_priors/goal_prior_distribution_task1.csv")
 
-colnames(time_series_surprisal) = c("agent", "surprisal_correlation", "surprisal_correlation_se_min", "surprisal_correlation_se_max", "run")
-surprisal_time_series_phi = merge(time_series_surprisal, average_data_task4, by = c("agent", "run"))
 
 #### AVERAGE PLOTS ####
 
 # Replication plot
 ggsave(
   "plots/replicate_plot.jpg",
-  ggarrange(
-    make_LOD_plot(LOD_data, "Phi", y_label = "Average Phi", seperator = "task"),
-    make_LOD_plot(LOD_data, "n_concepts", y_label = "Average number of concepts", seperator = "task"),
-    make_LOD_plot(LOD_data, "fitness", y_label = "Average fitness", seperator = "task"),
+  ggpubr::ggarrange(
+    make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
+    make_LOD_plot(averaged_data, "n_concepts", y_label = "Average number of concepts", seperator = "task"),
+    make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
     labels = "auto",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3
+)
+
+# Surprisal plot
+ggsave(
+  "plots/averaged_surprisal.jpg",
+  make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
+  width = 4, height = 3
 )
 
 
@@ -60,57 +45,29 @@ end_fitness[end_fitness$fitness==min(end_fitness$fitness)] # RUN 10
 # Perfect
 end_fitness[end_fitness$fitness==1] #  RUN 14 29 33 34 49
 
-t = 4
-for (i in 1:8){
-  
-  # Plot with Worst
-  ggsave(paste0("plots/time_step_plots/worst_animat_trial",t ,".jpg"),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
-           tile_variables = c("S1", "S2", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 10, agents = c(10,50,90), trials = t
-         ), width = 8, height = 10
-  )
-  
-  
-  # Plot with Perfect
-  ggsave(paste0("plots/time_step_plots/perfect_animat_trial",t ,".jpg"),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
-           tile_variables = c("S1", "S2", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 49, agents =  c(10,50,90), trials = t
-         ), width = 8, height = 10
-  )
-  
-  t = t + 16
-}
 
-ggsave("plots/time_step_plots/worst_perfect/timestep_worst_perfect.jpg",
+
+
+ggsave("plots/timestep_worst_perfect.jpg",
        ggpubr::ggarrange(
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
+           facet = "~agent",
            runs = 10, agents = c(10,50,90)-1, trials = 36
          ),
          make_timestep_plot(
-           data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           data = timestep_data_task4,
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
+           facet = "~agent",
            runs = 49, agents =  c(10,50,90)-1, trials = 36
          ),
          ncol = 2, common.legend = T, 
@@ -126,12 +83,13 @@ ggsave("plots/time_step_plots/worst_perfect/timestep_worst_perfect.jpg",
 
 
 
-ggsave("plots/time_step_plots/timestep_selection.jpg",
+ggsave("plots/timestep_selection.jpg",
        ggpubr::ggarrange(
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -139,8 +97,9 @@ ggsave("plots/time_step_plots/timestep_selection.jpg",
          ),
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -148,8 +107,9 @@ ggsave("plots/time_step_plots/timestep_selection.jpg",
          ),
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -157,8 +117,9 @@ ggsave("plots/time_step_plots/timestep_selection.jpg",
          ),
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -166,8 +127,9 @@ ggsave("plots/time_step_plots/timestep_selection.jpg",
          ),
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -175,8 +137,9 @@ ggsave("plots/time_step_plots/timestep_selection.jpg",
          ),
          make_timestep_plot(
            data = timestep_data_task4, 
-           line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-           line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+           fitness_data = fitness_task4,
+           line_variables = c("surprisal", "Phi"),
+           line_names = c("Surprisal", "Phi"),
            tile_variables = c("S2", "S1", "M1", "M2"),
            tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
            facet = "~agent", 
@@ -196,12 +159,13 @@ fitness_list = subset(fitness_task4, agent==120)$fitness
 
 # Inspection plots for generation 120
 for (i in 0:49){
-  ggsave(paste0("plots/time_step_plots/generation120/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
+  ggsave(paste0("plots/time_step_plots_inspection/generation120/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
          ggpubr::ggarrange(
            make_timestep_plot(
              data = timestep_data_task4, 
-             line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-             line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+             fitness_data = fitness_task4,
+             line_variables = c("surprisal", "Phi"),
+             line_names = c("Surprisal", "Phi"),
              tile_variables = c("S2", "S1", "M1", "M2"),
              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
              facet = "~trial", 
@@ -209,8 +173,9 @@ for (i in 0:49){
            ),
            make_timestep_plot(
              data = timestep_data_task4, 
-             line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-             line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+             fitness_data = fitness_task4,
+             line_variables = c("surprisal", "Phi"),
+             line_names = c("Surprisal", "Phi"),
              tile_variables = c("S2", "S1", "M1", "M2"),
              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
              facet = "~trial", 
@@ -223,12 +188,13 @@ for (i in 0:49){
 
 # Inspection plots for evolution
 for (i in 0:49){
-  ggsave(paste0("plots/time_step_plots/evolution/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
+  ggsave(paste0("plots/time_step_plots_inspection/evolution/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
          ggpubr::ggarrange(
            make_timestep_plot(
              data = timestep_data_task4, 
-             line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-             line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+             fitness_data = fitness_task4,
+             line_variables = c("surprisal", "Phi"),
+             line_names = c("Surprisal", "Phi"),
              tile_variables = c("S2", "S1", "M1", "M2"),
              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
              facet = "~agent", 
@@ -236,8 +202,9 @@ for (i in 0:49){
            ),
            make_timestep_plot(
              data = timestep_data_task4, 
-             line_variables = c("surprisal_internal_cond1_LOD", "surprisal_blanket_cond1_LOD", "Phi"),
-             line_names = c("Internal surprisal", "Blanket surprisal", "Phi"),
+             fitness_data = fitness_task4,
+             line_variables = c("surprisal", "Phi"),
+             line_names = c("Surprisal", "Phi"),
              tile_variables = c("S2", "S1", "M1", "M2"),
              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
              facet = "~agent", 
@@ -248,45 +215,22 @@ for (i in 0:49){
   )
 }
 
-# TEST PLOT
-ggsave("plots/test_timestep.jpg",
-       make_timestep_plot(
-         data = timestep_data_task4, 
-         line_variables = c("surprisal_blanket_cond1_LOD", "Phi"),
-         line_names = c("Blanket surprisal", "Phi", "Internal surprisal"),
-         tile_variables = c("S1", "S2", "M1", "M2"),
-         tile_names = c("Sensory left", "Sensory right", "Motor left", "Motor right"),
-         facet = "~agent", 
-         runs = 37, agents = c(30,60,90), trials = 4
-       ), width = 8, height = 10
-)
-
- 
-make_timestep_plot(
-  data = timestep_data_task4, 
-  line_variables = c("Phi", "surprisal_blanket_cond1_LOD"),
-  line_names = c("Phi", "Surprisal"),
-  tile_variables = c("S1", "S2", "M1", "M2"),
-  tile_names = c("Sensory left", "Sensory right", "Motor left", "Motor right"),
-  facet = "~agent", 
-  runs = 37, agents = c(30,60,90), trials = 4
-)
 
 #### TIME SERIES PLOTS ####
 
 ggsave(
-  "plots/time_series_density_internal.jpg",
-  make_time_series_plot(time_series_data, seperator = "task"),
+  "plots/time_series_density_-16_16.jpg",
+  make_time_series_plot(time_series_data, range = -16:16),
   width = 7.5, height = 6
 )
 
 ggsave(
-  "plots/time_series_density_surprisal.jpg",
-  make_time_series_plot(time_series_surprisal, range = -16:16),
+  "plots/time_series_density_-6_5.jpg",
+  make_time_series_plot(time_series_data, range = -6:5),
   width = 7.5, height = 6
 )
 
-make_time_series_plot(time_series_data_task4, seperator = "agent_groups")
+make_time_series_plot(time_series_data, seperator = "agent_groups")
 
 for (run in 0:49){
   path = paste0("plots/time_series/agent_groups/",run,".jpg")
@@ -295,21 +239,31 @@ for (run in 0:49){
 
 
 
-fitness_groups = get_fitness_groups(LOD_data_task4, fitness_task4, "end", rep(10,5))
-make_time_series_plot(time_series_data_task4, seperator = "fitness_groups", fitness_groups = fitness_groups)
-
-
-
+fitness_groups = get_fitness_groups(subset(averaged_data, task == "Task 4"), fitness_task4, "end", c(9,9,9,9,9,5))
+make_time_series_plot(time_series_data, seperator = "fitness_groups", fitness_groups = fitness_groups)
 
 
 ggplot(timestep_data_task4, aes(x = agent)) +
   geom_bar(aes(fill = as.factor(animat_follow))) +
   facet_wrap(~fitness_group)
 
+fitness_order = get_fitness_groups(subset(averaged_data, task == "Task 4"), fitness_task4, "end", 50)
+data_list = list()
+for (i in 1:50){
+  runs = fitness_order[[1]][i]
+  cors = subset(time_series_data, run %in% runs & lag == 0)$cor
+  data_list[[i]] = data.frame(cor = cors, fit_group = i)
+}
+timeseries_fit_group_data = do.call(rbind, data_list)
 
-time_series_surprisal_generation_plot(time_series_surprisal)
+ggsave(
+  "plots/density_split_by_fitness_lag0.jpg",
+  ggplot(timeseries_fit_group_data, aes(x = cor)) +
+    geom_density(aes(color=as.factor(fit_group), fill = as.factor(fit_group)), alpha = 0.1, size = 0.5) +
+    theme_classic(),
+  width = 12, height = 5
+)
 
-time_series_surprisal_phi_plot(surprisal_time_series_phi)
 
 
 
