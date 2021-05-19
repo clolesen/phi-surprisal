@@ -20,10 +20,9 @@ def calculate_surprisal(task=4):
     perfect_runs = list(data_fitness.loc[(data_fitness['agent'] == data_fitness['agent'].max()) & (data_fitness['fitness'] == 1)]['run'])
 
     #Read data
-    #timestep_data = pd.read_csv('processed_data/timestep_data_task{}_info.csv'.format(task))
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task)) #temp
-    timestep_data = timestep_data.drop(['sensory_state', 'surprisal'], axis = 1)
-
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}_TEST.csv'.format(task)) #temp
+    
     #Create sensory state and context state
     timestep_data['sensory_state'] = timestep_data['S1'].astype('str') + timestep_data['S2'].astype('str')
 
@@ -49,9 +48,9 @@ def calculate_surprisal(task=4):
     timestep_data_surprisal['surprisal'] = None
 
     #Go through each generation (agent) in each simulation / LOD (run)
-    for run in range(data_fitness['run'].max()+1):
+    for run in data_fitness['run'].unique():
         print(run)
-        for agent in range(data_fitness['agent'].max()):
+        for agent in data_fitness['agent'].unique():
             
             #Reset the counter for minimum surprisal
             min_surprisal = None
@@ -84,4 +83,4 @@ def calculate_surprisal(task=4):
 
     #Save data to csv
     #timestep_data.to_csv('processed_data/timestep_data_task{}_surprisal.csv'.format(task), index=False)
-    timestep_data.to_csv('processed_data/timestep_data_task{}_TEST.csv'.format(task), index=False)
+    timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)

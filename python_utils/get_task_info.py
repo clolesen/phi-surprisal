@@ -1,12 +1,17 @@
 import numpy as np
 import pandas as pd
 
+#Only for writing code
+if __name__ == "__main__":
+    import os
+    os.chdir('..')
+    task = 4
+
 
 def get_task_info(task):
 
     # Read in the dataframe
-    data_timestep = pd.read_csv(
-        'processed_data/timestep_data_task{}.csv'.format(task))
+    data_timestep = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
 
     # 1 set consists of 16 trials of 33 timesteps
     n_trials = 16
@@ -22,8 +27,7 @@ def get_task_info(task):
         set_length + [6] * 2*set_length + [5] * 2*set_length
 
     # Each column is filled out with the patterns specified above
-    data_timestep['block_movement'] = np.resize(
-        block_movement, data_timestep.shape[0])
+    data_timestep['block_movement'] = np.resize(block_movement, data_timestep.shape[0])
     data_timestep['task_type'] = np.resize(task_type, data_timestep.shape[0])
     data_timestep['block_size'] = np.resize(block_size, data_timestep.shape[0])
 
@@ -32,16 +36,10 @@ def get_task_info(task):
 
     # Make empty column to populate the first time the animat sees the block
     data_timestep['first_sight'] = 0
-
-    # Go through each run and agent combination
-    for run in range(data_timestep['run'].max()+1):
-        print(run)
-        for agent in range(data_timestep['agent'].max()):
-            
-            # Subset and find the index where the animat sees the block for the first time
-            first_sight_idx = data_timestep[(data_timestep['run'] == run) & (data_timestep['agent'] == agent)].is_seeing.idxmax()
-            # Add this moment to the dataset
-            data_timestep[first_sight_idx]['first_sight'] = 1
+    #Get indeces for when the animat sees the block the first time
+    first_sight_idx = data_timestep.groupby(['run', 'agent', 'trial'])['is_seeing'].idxmax()
+    #Change the first_sight column to 1 at those places
+    data_timestep.loc[first_sight_idx, 'first_sight'] = 1
 
     # Drop the is_seeing column now that is unneeded
     data_timestep.drop(['is_seeing'], axis = 1)
@@ -49,3 +47,4 @@ def get_task_info(task):
     # Save the csv
     data_timestep.to_csv(
         'processed_data/timestep_data_task{}.csv'.format(task), index=False)
+
