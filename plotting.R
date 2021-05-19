@@ -11,6 +11,8 @@ averaged_data = fread("processed_data/full_average_data.csv")
 goal_prior_task1 = fread("goal_priors/goal_prior_distribution_task1.csv", colClasses = c('sensory_state'='character'))
 sub_goal_prior_task1 = subset(goal_prior_task1, run %in% c(0,1,10,11,12))
 
+goal_prior_task4 = fread("goal_priors/goal_prior_distribution_task4.csv", colClasses = c('sensory_state'='character'))
+
 #### AVERAGE PLOTS ####
 
 # Replication plot
@@ -269,7 +271,14 @@ ggsave(
 
 #### GOAL PRIOR PLOTS ####
 
-make_goal_prior_plot(sub_goal_prior_task1)
+ggsave(
+  "plots/goal_prior_plot.jpg",
+  make_goal_prior_plot(goal_prior_task4),
+  width = 13, height = 10 
+)
+
+
+stop
 
 ##### MIXED CODE ####
 

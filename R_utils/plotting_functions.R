@@ -452,7 +452,10 @@ make_sub_goal_prior_plot = function(data){
                          ) + 
     theme(axis.text.y = element_text(size = 8),
           axis.text.x = element_text(size = 8),
-          strip.background =element_rect(fill="white")
+          strip.background =element_rect(fill="white"),
+          strip.text = element_text(size = 10, face = "bold", color = "#333333"),
+          legend.title = element_text(color = "#333333", size = 10, vjust = 0.80),
+          legend.text = element_text(size = 8)
           )
   
   return(plot)
