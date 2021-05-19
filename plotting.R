@@ -8,8 +8,8 @@ time_series_data = fread("processed_data/time_series_surprisal_Phi.csv")
 averaged_data = fread("processed_data/full_average_data.csv")
 
 # Goal priors
-goal_prior_task1 = fread("goal_priors/goal_prior_distribution_task1.csv")
-
+goal_prior_task1 = fread("goal_priors/goal_prior_distribution_task1.csv", colClasses = c('sensory_state'='character'))
+sub_goal_prior_task1 = subset(goal_prior_task1, run %in% c(0,1,10,11,12))
 
 #### AVERAGE PLOTS ####
 
@@ -266,6 +266,10 @@ ggsave(
 
 
 
+
+#### GOAL PRIOR PLOTS ####
+
+make_goal_prior_plot(sub_goal_prior_task1)
 
 ##### MIXED CODE ####
 

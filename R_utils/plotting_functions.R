@@ -3,7 +3,7 @@ library(data.table)
 library(ggpubr)
 library(tidyverse)
 library(egg)
-
+library(plyr)
 
 # colors used in plots
 # 1: Black
@@ -430,6 +430,53 @@ time_series_surprisal_phi_plot = function(data){
     theme_classic() +
     labs(y = "Average Phi", x = "Average surprisal correlations", title = " ", color = " ", fill = " ") +
     colors + fills
+  
+  return(plot)
+}
+
+#### GOAL PRIOR PLOT ####
+
+make_sub_goal_prior_plot = function(data){
+  
+  title = data$split_column[1]
+  
+  plot = ggplot(data, aes(x = timestep, y = sensory_state, fill = percentage)) +
+    geom_tile() +
+    facet_grid(run ~ .) +
+    labs(title = title, x = " ", y = " ") +
+    theme_pubclean() +
+    scale_fill_gradient2(low = color_palette[4], high = color_palette[5], mid = "white", midpoint = .5)
+  
+  return(plot)
+}
+
+make_goal_prior_plot_data = function(data){
+  
+  data$task_type = mapvalues(data$task_type, from = c("avoid", "catch"), to = c("Avoid","Catch"))
+  data$block_movement = mapvalues(data$block_movement, from = c(-1, 1), to = c("Left", "Right"))
+  
+  data$run = paste("LOD:", data$run)
+  
+  data$percentage = exp(data$surprisal * -1)
+  
+  data$split_column = paste(data$task_type, "/", data$block_movement)
+  
+  split_data = split(data, data$split_column)
+  
+  return(split_data)
+}
+
+make_goal_prior_plot = function(data){
+  
+  plot_data = make_goal_prior_plot_data(data)
+  
+  plot = ggpubr::ggarrange(
+    make_sub_goal_prior_plot(plot_data[[1]]),
+    make_sub_goal_prior_plot(plot_data[[2]]),
+    make_sub_goal_prior_plot(plot_data[[3]]),
+    make_sub_goal_prior_plot(plot_data[[4]]),
+    ncol = 2, nrow = 2, common.legend = T
+  )
   
   return(plot)
 }
