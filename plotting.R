@@ -217,12 +217,16 @@ ggsave(
 #### AVERAGE TRIAL PLOTS ####
 
 ggsave(
-  "plots/average trial_plot.jpg",
+  "plots/average_trial_plot.jpg",
   make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data),
   width = 15, height = 6
 )
 
-average_trial_spaghetti_plot(timestep_data_task4)
+ggsave(
+  "plots/average_trial_all_runs_plot.jpg",
+  average_trial_all_runs_plot(timestep_data_task4, time_series_data),
+  width = 15, height = 12
+)
 
 
 #Stop
