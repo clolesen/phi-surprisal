@@ -224,7 +224,15 @@ add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
   return(plot)           
 }
 
-make_timestep_plot = function(data, fitness_data, line_variables, line_names, tile_variables, tile_names, facet, runs = 0:49, agents = 0:120, trials = 0:127){
+make_timestep_plot = function(data, fitness_data, 
+                              line_variables = c("surprisal", "Phi"),
+                              line_names = c("Surprisal", "Phi"),
+                              tile_variables = c("S2", "S1", "M1", "M2"),
+                              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
+                              facet = "~agent", 
+                              runs = 0:49, agents = 0:120, trials = 0:127){
+  
+  
   
   #LINE PLOT
   line_plot_data = make_timestep_plot_data(data, line_variables, runs, agents, trials)
@@ -303,6 +311,31 @@ make_timestep_plot = function(data, fitness_data, line_variables, line_names, ti
   return(full_plot)
 }
 
+
+make_timestep_multi_plot = function(data, fitness_data, trial_list, n_col = 2, n_row = 3){
+  
+  plot_list = list()
+  
+  i = 1
+  for(trial in trial_list){
+    plot_list[[i]] = make_timestep_plot(
+      data = data, 
+      fitness_data = fitness_data, 
+      runs = trial[1], agents = trial[2], trials = trial[3]
+    )
+    
+    i = i + 1
+  }
+  
+  plot = ggpubr::ggarrange(
+    plotlist = plot_list,
+    ncol = n_col, nrow = n_row,common.legend = T 
+  )
+  
+  return(plot)
+}
+
+
 #
 
 #### TIME SERIES PLOTS ####
@@ -312,10 +345,10 @@ time_series_plot_data = function(data, range, runs, agents, trials, fitness_grou
   
   plot_data = subset(data,
                      lag %in% range &
-                     run %in% runs &
-                      agent %in% agents &
+                       run %in% runs &
+                       agent %in% agents &
                        trial %in% trial
-                     )
+  )
   
   if (is.list(fitness_groups)){
     plot_data$fitness_groups = 0
@@ -446,7 +479,7 @@ make_sub_goal_prior_plot = function(data){
     facet_grid(run ~ .) +
     labs(title = title, x = " ", y = " ") +
     theme_pubclean() +
-    scale_fill_gradientn(colors = c(color_palette[4], "white", color_palette[5], color_palette[6]),
+    scale_fill_gradientn(colors = c("gray", "white", color_palette[5], color_palette[6]),
                          values=rescale(c(0,0.25,0.75,1)),
                          limits=c(0,1)
                          ) + 
@@ -491,3 +524,202 @@ make_goal_prior_plot = function(data){
   
   return(plot)
 }
+
+#### AVERAGE TRIAL PLOT ####
+
+
+average_across_trials = function(data){
+  
+  timestep_min = min(data$event_timestep)
+  
+  i = 1
+  data_list = list()
+  for (timestep in timestep_min:33){
+    
+    index_event = which(data$event_timestep == timestep)
+    sub_data_event = data[index_event,]
+    
+    index_timestep = which(data$timestep == timestep)
+    sub_data_timestep = data[index_timestep,]
+    
+    sqrt_n_event = sqrt(length(sub_data_event$Phi))
+    sqrt_n_timestep= sqrt(length(sub_data_timestep$Phi))
+    
+    
+    data_list[[i]] = data.frame(
+      # Normal timestep measures
+      Phi_mean = mean(sub_data_timestep$Phi),
+      Phi_se = sd(sub_data_timestep$Phi)/sqrt_n_timestep,
+      Phi_sd = sd(sub_data_timestep$Phi),
+      Phi_75percentile = quantile(sub_data_timestep$Phi, .75),
+      Phi_25percentile = quantile(sub_data_timestep$Phi, .25),
+      surprisal_mean = mean(sub_data_timestep$surprisal),
+      surprisal_se = sd(sub_data_timestep$surprisal)/sqrt_n_timestep,
+      surprisal_sd = sd(sub_data_timestep$surprisal),
+      surprisal_75percentile = quantile(sub_data_timestep$surprisal, .75),
+      surprisal_25percentile = quantile(sub_data_timestep$surprisal, .25),
+      
+      # Event measures
+      Phi_mean_event = mean(sub_data_event$Phi),
+      Phi_se_event = sd(sub_data_event$Phi)/sqrt_n_event,
+      Phi_sd_event = sd(sub_data_event$Phi),
+      Phi_75percentile_event = quantile(sub_data_event$Phi, .75),
+      Phi_25percentile_event = quantile(sub_data_event$Phi, .25),
+      surprisal_mean_event = mean(sub_data_event$surprisal),
+      surprisal_se_event = sd(sub_data_event$surprisal)/sqrt_n_event,
+      surprisal_sd_event = sd(sub_data_event$surprisal),
+      surprisal_75percentile_event = quantile(sub_data_event$surprisal, .75),
+      surprisal_25percentile_event = quantile(sub_data_event$surprisal, .25),
+      
+      timestep = timestep
+    )
+    
+    i = i + 1
+  }
+  
+  averaged_data = do.call(rbind, data_list)
+  
+  return(averaged_data)
+}
+
+make_average_trial_data = function(data, fitness_data, time_series_data, task_number){
+  
+  data = subset(data, agent == 120)
+  time_series_data = subset(time_series_data, agent == 120 & task == paste("Task",task_number) & lag == 0)
+  
+  # make event-related timestep column
+  data$trial_id = paste0("r", data$run, "a", data$agent, "t", data$trial)
+  split_data = split(data, data$trial_id)
+  
+  for (i in 1:length(split_data)){
+    split_data[[i]]$event_timestep = split_data[[i]]$timestep - which(split_data[[i]]$first_sight==1)
+  }
+  
+  data = do.call(rbind, split_data)
+  
+  profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
+  profile_data$profile = NA
+  profile_data$profile[profile_data$cor<(-0.1)] = "Negative"
+  profile_data$profile[profile_data$cor>(-0.1)&profile_data$cor<0.1] = "Neutral"
+  profile_data$profile[profile_data$cor>0.1] = "Positive"
+  
+  # Make averages
+  data_list = list()
+  i = 1
+  
+  for(group in c("all", "perfect", "Negative", "Neutral", "Positive")){
+    
+    use_data = data
+    
+    if(group == "perfect"){
+      runs = fitness_data[fitness_data$agent == 120 & fitness_data$fitness == 1,]$run
+      use_data = subset(use_data, run %in% runs)
+    }
+    
+    if(group == "Negative"){
+      runs = profile_data[profile_data$profile == "Negative",]$run
+      use_data = subset(use_data, run %in% runs)
+    }
+    
+    if(group == "Neutral"){
+      runs = profile_data[profile_data$profile == "Neutral",]$run
+      use_data = subset(use_data, run %in% runs)
+    }
+    
+    if(group == "Positive"){
+      runs = profile_data[profile_data$profile == "Positive",]$run
+      use_data = subset(use_data, run %in% runs)
+    }
+    
+    average_data = average_across_trials(use_data)
+    
+    average_data$group = group
+    
+    data_list[[i]] = average_data
+    
+    i = i + 1
+    
+    
+  }
+  
+  data = do.call(rbind, data_list)
+  
+  return(data)
+}
+
+average_trial_plot = function(data, variable, event, title, subtitle, profile = F){
+  
+  if (variable == "surprisal"){
+    y_limit = c(0.15,2.4)
+    y_label = "Average surprisal"
+  } else {
+    y_limit = c(0.1,0.8)
+    y_label = "Average Phi"
+  } 
+  if (event == T){
+    x_limit = c(-7,30)
+    x_label = "Relative timestep"
+    line_variable = paste0(variable,"_mean_event")
+    ribbon_variable_min = paste0(line_variable, "-", variable,"_se_event")
+    ribbon_variable_max = paste0(line_variable, "+", variable,"_se_event")
+    #ribbon_variable_min = paste0(variable,"_25percentile_event")
+    #ribbon_variable_max= paste0(variable,"_75percentile_event")
+  } else {
+    x_limit = c(1,33)
+    x_label = "Timestep"
+    line_variable = paste0(variable,"_mean")
+    ribbon_variable_min = paste0(line_variable, "-", variable,"_se")
+    ribbon_variable_max= paste0(line_variable, "+",variable,"_se")
+    #ribbon_variable_min = paste0(variable,"_25percentile")
+    #ribbon_variable_max= paste0(variable,"_75percentile")
+  }
+  
+  plot = ggplot(data, aes(x = timestep)) +
+    geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
+    geom_ribbon(aes_string(ymin = ribbon_variable_min, ymax = ribbon_variable_max, fill = "seperator"), alpha = .2) +
+    geom_line(aes_string(y = line_variable,color = "seperator"), size = 1) +
+    lims(x = x_limit, y = y_limit) +
+    theme_classic() +
+    labs(title = title, x = x_label, y = y_label, color = " ", fill = " ", subtitle = subtitle)
+    if (isFALSE(profile)){
+      plot = plot + colors + fills
+    } else {
+      plot = plot +
+        scale_color_manual(values = c("#6B00B9","#989898","#8D391E")) +
+        scale_fill_manual(values = c("#6B00B9","#989898","#8D391E"))
+    }
+    
+  
+  return(plot)
+}
+
+make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data){
+  
+  task1_data = make_average_trial_data(timestep_data_task1, fitness_task1, time_series_data, 1)
+  task4_data = make_average_trial_data(timestep_data_task4, fitness_task4, time_series_data, 4)
+  
+  profile_data = subset(task4_data, group %in% c("Negative", "Neutral", "Positive"))
+  profile_data$seperator = profile_data$group
+  
+  task1_data= subset(task1_data, group == "all" )
+  task4_data_perfect = subset(task4_data, group == "perfect" )
+  task4_data= subset(task4_data, group == "all" )
+  
+  task1_data$seperator = "Task 1"
+  task4_data$seperator = "Task 4"
+  task4_data_perfect$seperator = "Task 4 - Perfect"
+  
+  task_data = rbind(task1_data, task4_data, task4_data_perfect)
+  
+  plot = ggpubr::ggarrange(
+    average_trial_plot(task_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event"),
+    average_trial_plot(task_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event"),
+    average_trial_plot(task_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials"),
+    average_trial_plot(profile_data, "Phi", event=T, profile = T, title = "Phi", subtitle = "Relative to first sight event \nTask 4 split into correlation profiles"),
+    ncol = 2, nrow = 2
+  )
+  
+  return(plot)
+}
+
+profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]

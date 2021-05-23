@@ -2,16 +2,23 @@ library(data.table)
 source("R_utils/plotting_functions.R")
 
 #### DATA ####
+timestep_data_task1 = fread("processed_data/timestep_data_task1.csv")
 timestep_data_task4 = fread("processed_data/timestep_data_task4.csv")
-time_series_data = fread("processed_data/time_series_surprisal_Phi.csv")
+
 # Combined data
 averaged_data = fread("processed_data/full_average_data.csv")
+time_series_data = fread("processed_data/time_series_surprisal_Phi_combined.csv")
 
-# Goal priors
-goal_prior_task1 = fread("goal_priors/goal_prior_distribution_task1.csv", colClasses = c('sensory_state'='character'))
-sub_goal_prior_task1 = subset(goal_prior_task1, run %in% c(0,1,10,11,12))
-
+# Goal prior
 goal_prior_task4 = fread("goal_priors/goal_prior_distribution_task4.csv", colClasses = c('sensory_state'='character'))
+
+# Fitness data
+fitness_task1 = fread("raw_data/fitness_task1.csv")
+fitness_task4 = fread("raw_data/fitness_task4.csv")
+
+# Average trial data
+average_trial_data_task4 = fread("processed_data/averaged_trial_data_task4.csv")
+average_trial_data_task1 = fread("processed_data/averaged_trial_data_task1.csv")
 
 #### AVERAGE PLOTS ####
 
@@ -27,11 +34,16 @@ ggsave(
   ), width = 7.5, height = 3
 )
 
-# Surprisal plot
+# Average LOD plot
 ggsave(
-  "plots/averaged_surprisal.jpg",
-  make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
-  width = 4, height = 3
+  "plots/average_LOD_plot.jpg",
+  ggpubr::ggarrange(
+    make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
+    make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
+    make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
+    labels = "auto",
+    ncol = 3, common.legend = T
+  ), width = 7.5, height = 3
 )
 
 
@@ -47,29 +59,17 @@ end_fitness[end_fitness$fitness==min(end_fitness$fitness)] # RUN 10
 # Perfect
 end_fitness[end_fitness$fitness==1] #  RUN 14 29 33 34 49
 
-
-
-
+# Worst and best plot
 ggsave("plots/timestep_worst_perfect.jpg",
        ggpubr::ggarrange(
          make_timestep_plot(
            data = timestep_data_task4, 
            fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent",
            runs = 10, agents = c(10,50,90)-1, trials = 36
          ),
          make_timestep_plot(
            data = timestep_data_task4,
            fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent",
            runs = 49, agents =  c(10,50,90)-1, trials = 36
          ),
          ncol = 2, common.legend = T, 
@@ -80,140 +80,89 @@ ggsave("plots/timestep_worst_perfect.jpg",
 )
 
 
-
-
-
-
-
+# Example selection plot
 ggsave("plots/timestep_selection.jpg",
-       ggpubr::ggarrange(
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 26, agents = 120, trials = 55
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 6, agents = 120, trials = 55
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 3, agents = 120, trials = 103
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 14, agents = 120, trials = 103
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 36, agents = 120, trials = 87
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           line_variables = c("surprisal", "Phi"),
-           line_names = c("Surprisal", "Phi"),
-           tile_variables = c("S2", "S1", "M1", "M2"),
-           tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-           facet = "~agent", 
-           runs = 1, agents = 120, trials = 23
-         ),
-         ncol = 2, nrow = 3,common.legend = T 
+       make_timestep_multi_plot(data = timestep_data_task4, 
+                                fitness_data = fitness_task4,
+                                trial_list = list(
+                                  c(run = 26, agent = 120, trial = 55),
+                                  c(run = 6, agent = 120, trial = 55),
+                                  c(run = 3, agent = 120, trial = 103),
+                                  c(run = 14, agent = 120, trial = 103),
+                                  c(run = 36, agent = 120, trial = 87),
+                                  c(run = 1, agent = 120, trial = 23)
+                                )
        ), width = 14, height = 10.5
 )
 
 
-
-
-
-
-
-fitness_list = subset(fitness_task4, agent==120)$fitness
-
 # Inspection plots for generation 120
-for (i in 0:49){
-  ggsave(paste0("plots/time_step_plots_inspection/generation120/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
-         ggpubr::ggarrange(
-           make_timestep_plot(
-             data = timestep_data_task4, 
-             fitness_data = fitness_task4,
-             line_variables = c("surprisal", "Phi"),
-             line_names = c("Surprisal", "Phi"),
-             tile_variables = c("S2", "S1", "M1", "M2"),
-             tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-             facet = "~trial", 
-             runs = i, agents = 120, trials = c(4,36,68,100)+3
-           ),
-           make_timestep_plot(
-             data = timestep_data_task4, 
-             fitness_data = fitness_task4,
-             line_variables = c("surprisal", "Phi"),
-             line_names = c("Surprisal", "Phi"),
-             tile_variables = c("S2", "S1", "M1", "M2"),
-             tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-             facet = "~trial", 
-             runs = i, agents = 120, trials = c(20,52,84,116)+3
-           ),
-           ncol = 2, common.legend = T
-         ), width = 14, height = 13
+for (r in 0:49){
+  
+  inspection_trial_list = list()
+  i = 1
+  for(t in seq(0,127,4)){
+    inspection_trial_list[[i]] = c(run = r, agent = 120, trial = t)
+    i = i + 1
+  }
+  
+  # Task 1
+  ggsave(paste0("plots/timestep_inspection_plots/task_1/generation120/LOD_", r, ".jpg"),
+         make_timestep_multi_plot(data = timestep_data_task1, 
+                                  fitness_data = fitness_task1,
+                                  trial_list = inspection_trial_list,
+                                  n_col = 8,
+                                  n_row = 4
+         ), 
+         width = 56, height = 14, limitsize = F
   )
+  
+  # Task 4
+  ggsave(paste0("plots/timestep_inspection_plots/task_4/generation120/LOD_", r, ".jpg"),
+         make_timestep_multi_plot(data = timestep_data_task4, 
+                                  fitness_data = fitness_task4,
+                                  trial_list = inspection_trial_list,
+                                  n_col = 8,
+                                  n_row = 4
+         ), 
+         width = 56, height = 14, limitsize = F
+  )
+  
+  
 }
 
 # Inspection plots for evolution
-for (i in 0:49){
-  ggsave(paste0("plots/time_step_plots_inspection/evolution/LOD_", i,"_fitness_", fitness_list[i+1], ".jpg"),
-         ggpubr::ggarrange(
-           make_timestep_plot(
-             data = timestep_data_task4, 
-             fitness_data = fitness_task4,
-             line_variables = c("surprisal", "Phi"),
-             line_names = c("Surprisal", "Phi"),
-             tile_variables = c("S2", "S1", "M1", "M2"),
-             tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-             facet = "~agent", 
-             runs = i, agents = c(5,10,30,50), trials = 124
-           ),
-           make_timestep_plot(
-             data = timestep_data_task4, 
-             fitness_data = fitness_task4,
-             line_variables = c("surprisal", "Phi"),
-             line_names = c("Surprisal", "Phi"),
-             tile_variables = c("S2", "S1", "M1", "M2"),
-             tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
-             facet = "~agent", 
-             runs = i, agents = c(70,90,100,120), trials = 124
-           ),
-           ncol = 2, common.legend = T
-         ), width = 14, height = 13
+for (r in 0:49){
+  
+  inspection_trial_list = list()
+  i = 1
+  for(t in c(8, 28, 40, 60, 72, 92, 104, 124)){
+    for(a in c(5,10,30,50,70,90,100,120)){
+      inspection_trial_list[[i]] = c(run = r, agent = a, trial = t)
+      i = i + 1
+    }
+  }
+  
+  # Task 1
+  ggsave(paste0("plots/timestep_inspection_plots/task_1/evolution/LOD_", r, ".jpg"),
+         make_timestep_multi_plot(data = timestep_data_task1, 
+                                  fitness_data = fitness_task1,
+                                  trial_list = inspection_trial_list,
+                                  n_col = 8,
+                                  n_row = 8
+         ), 
+         width = 56, height = 27, limitsize = F
+  )
+  
+  # Task 4
+  ggsave(paste0("plots/timestep_inspection_plots/task_4/evolution/LOD_", r, ".jpg"),
+         make_timestep_multi_plot(data = timestep_data_task4, 
+                                  fitness_data = fitness_task4,
+                                  trial_list = inspection_trial_list,
+                                  n_col = 8,
+                                  n_row = 8
+         ), 
+         width = 56, height = 27, limitsize = F
   )
 }
 
@@ -222,51 +171,38 @@ for (i in 0:49){
 
 ggsave(
   "plots/time_series_density_-16_16.jpg",
-  make_time_series_plot(time_series_data, range = -16:16),
+  make_time_series_plot(time_series_data, range = -16:16, seperator = "task"),
   width = 7.5, height = 6
 )
 
 ggsave(
   "plots/time_series_density_-6_5.jpg",
-  make_time_series_plot(time_series_data, range = -6:5),
+  make_time_series_plot(time_series_data, range = -6:5, seperator = "task"),
   width = 7.5, height = 6
 )
 
-make_time_series_plot(time_series_data, seperator = "agent_groups")
+ggsave(
+  "plots/time_series_density_-6_5_last_generation.jpg",
+  make_time_series_plot(subset(time_series_data, agent == 120), range = -6:5, seperator = "task"),
+  width = 7.5, height = 6
+)
 
-for (run in 0:49){
-  path = paste0("plots/time_series/agent_groups/",run,".jpg")
-  ggsave(path, make_time_series_plot(time_series_data_task4, range = -2:3, runs = run, seperator = "agent_groups"), width = 12, height = 6)
-}
-
-
-
-fitness_groups = get_fitness_groups(subset(averaged_data, task == "Task 4"), fitness_task4, "end", c(9,9,9,9,9,5))
-make_time_series_plot(time_series_data, seperator = "fitness_groups", fitness_groups = fitness_groups)
-
-
-ggplot(timestep_data_task4, aes(x = agent)) +
-  geom_bar(aes(fill = as.factor(animat_follow))) +
-  facet_wrap(~fitness_group)
-
-fitness_order = get_fitness_groups(subset(averaged_data, task == "Task 4"), fitness_task4, "end", 50)
-data_list = list()
-for (i in 1:50){
-  runs = fitness_order[[1]][i]
-  cors = subset(time_series_data, run %in% runs & lag == 0)$cor
-  data_list[[i]] = data.frame(cor = cors, fit_group = i)
-}
-timeseries_fit_group_data = do.call(rbind, data_list)
+time_series_data_perfect_task4 = subset(time_series_data, run %in% c(14, 29, 33, 34, 49) & task == "Task 4")
+time_series_data_perfect_task4$task = "Task 4 - Perfect"
+time_series_data_perfect_task4 = rbind(time_series_data, time_series_data_perfect_task4)
 
 ggsave(
-  "plots/density_split_by_fitness_lag0.jpg",
-  ggplot(timeseries_fit_group_data, aes(x = cor)) +
-    geom_density(aes(color=as.factor(fit_group), fill = as.factor(fit_group)), alpha = 0.1, size = 0.5) +
-    theme_classic(),
-  width = 12, height = 5
+  "plots/time_series_density_-6_5_perfect_task4.jpg",
+  make_time_series_plot(time_series_data_perfect_task4, range = -6:5, seperator = "task"),
+  width = 7.5, height = 6
 )
 
 
+ggsave(
+  "plots/time_series_density_-6_5_average_LOD.jpg",
+  make_time_series_plot(time_series_data, range = -6:5, seperator = "task", average_LOD = T),
+  width = 7.5, height = 6
+)
 
 
 #### GOAL PRIOR PLOTS ####
@@ -278,8 +214,17 @@ ggsave(
 )
 
 
-stop
+#### AVERAGE TRIAL PLOTS ####
 
+ggsave(
+  "plots/average trial_plot.jpg",
+  make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data),
+  width = 15, height = 6
+)
+
+
+
+#Stop
 ##### MIXED CODE ####
 
 ggarrange(
