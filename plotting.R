@@ -222,6 +222,7 @@ ggsave(
   width = 15, height = 6
 )
 
+average_trial_spaghetti_plot(timestep_data_task4)
 
 
 #Stop

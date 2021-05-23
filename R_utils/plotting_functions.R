@@ -499,7 +499,7 @@ make_goal_prior_plot_data = function(data){
   data$task_type = mapvalues(data$task_type, from = c("avoid", "catch"), to = c("Avoid","Catch"))
   data$block_movement = mapvalues(data$block_movement, from = c(-1, 1), to = c("Left", "Right"))
   
-  data$run = paste("LOD:", data$run)
+  data$run = paste("LOD:", data$run+1)
   
   data$Probability = exp(data$surprisal * -1)
   
@@ -526,7 +526,6 @@ make_goal_prior_plot = function(data){
 }
 
 #### AVERAGE TRIAL PLOT ####
-
 
 average_across_trials = function(data){
   
@@ -721,5 +720,43 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   
   return(plot)
 }
+
+average_trial_all_runs_plot = function(data, time_series_data){
+  
+  
+  data = subset(data, agent == 120)
+  
+  
+  data$trial_id = paste0("r", data$run, "a", data$agent, "t", data$trial)
+  split_data = split(data, data$trial_id)
+  
+  for (i in 1:length(split_data)){
+    split_data[[i]]$event_timestep = split_data[[i]]$timestep - which(split_data[[i]]$first_sight==1)
+  }
+  
+  data = do.call(rbind, split_data)
+  
+  time_series_data = subset(time_series_data, agent == 120 & task == "Task 4" & lag == 0)
+  
+  profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
+  profile_data$profile = NA
+  profile_data$profile[profile_data$cor<(-0.1)] = "Negative"
+  profile_data$profile[profile_data$cor>(-0.1)&profile_data$cor<0.1] = "Neutral"
+  profile_data$profile[profile_data$cor>0.1] = "Positive"
+  
+  data = dplyr::summarise(group_by(data, run, event_timestep), Phi = mean(Phi), surprisal = mean(surprisal))
+  
+  plot_data = merge(data, profile_data, by = "run")
+  
+  plot = ggplot(plot_data, aes(x = event_timestep, y = Phi, color = profile)) +
+    geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
+    lims(x = c(-7,30)) +
+    theme_classic() +
+    geom_line(size = 1.5) +
+    facet_wrap(~run) +
+    scale_color_manual(values = c("#6B00B9","#989898","#8D391E"))
+  return(plot)
+}
+
 
 profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]
