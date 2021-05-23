@@ -21,7 +21,6 @@ def calculate_surprisal(task=4):
 
     #Read data
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task)) #temp
-    timestep_data = pd.read_csv('processed_data/timestep_data_task{}_TEST.csv'.format(task)) #temp
     
     #Create sensory state and context state
     timestep_data['sensory_state'] = timestep_data['S1'].astype('str') + timestep_data['S2'].astype('str')

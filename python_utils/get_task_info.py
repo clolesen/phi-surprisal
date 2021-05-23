@@ -5,7 +5,7 @@ import pandas as pd
 if __name__ == "__main__":
     import os
     os.chdir('..')
-    task = 4
+    task = 1
 
 
 def get_task_info(task):
@@ -42,9 +42,16 @@ def get_task_info(task):
     data_timestep.loc[first_sight_idx, 'first_sight'] = 1
 
     # Drop the is_seeing column now that is unneeded
-    data_timestep.drop(['is_seeing'], axis = 1)
+    data_timestep = data_timestep.drop(['is_seeing'], axis = 1)
 
     # Save the csv
     data_timestep.to_csv(
         'processed_data/timestep_data_task{}.csv'.format(task), index=False)
+
+
+
+
+
+
+
 
