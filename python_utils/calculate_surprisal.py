@@ -1,7 +1,8 @@
 #import libraries
 import pandas as pd
 import numpy as np
-import pickle
+from scipy.stats import entropy as kl_divergence
+from tqdm import tqdm
 
 #Only for writing code
 if __name__ == "__main__":
@@ -9,7 +10,28 @@ if __name__ == "__main__":
     os.chdir('..')
     task = 4
 
+#Function for finding the minimum kl-divergence
+def find_lowest_kl(timestep_data_group, goal_prior_surprisal):
 
+    #Count how many times each state appeared in each context
+    observed_counts = timestep_data_group.groupby(['timestep', 'task_type', 'block_movement', 'sensory_state'])['sensory_state'].agg(probability='count')
+
+    #Add 1 to all counts to include unobserved states
+    observed_counts = observed_counts.unstack(fill_value=0).stack() + 1
+
+    #Transform counts into probabilities
+    observed_probabilities = observed_counts.groupby(['timestep', 'task_type', 'block_movement']).apply(lambda x: x / float(x.sum()) ).reset_index()
+
+    #Group goal prior by run
+    goal_prior_grouped = goal_prior_surprisal.groupby('run')['surprisal']
+    
+    #Get kl divergences to different goal prior
+    kl_divergences = goal_prior_grouped.agg(lambda x: kl_divergence(observed_probabilities['probability'], np.exp(-x)))
+
+    #Return the goal prior number with the lowest divergence
+    return kl_divergences.idxmin()
+
+#Function for calculating the surprisal at each timepoint
 def calculate_surprisal(task=4):
     
     #-- get data --#
@@ -20,9 +42,10 @@ def calculate_surprisal(task=4):
     perfect_runs = list(data_fitness.loc[(data_fitness['agent'] == data_fitness['agent'].max()) & (data_fitness['fitness'] == 1)]['run'])
 
     #Read data
-    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task)) #temp
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
+    timestep_data = timestep_data.drop('surprisal', axis=1)
     
-    #Create sensory state and context state
+    #Create sensory state
     timestep_data['sensory_state'] = timestep_data['S1'].astype('str') + timestep_data['S2'].astype('str')
 
     #-- get goal priors --#
@@ -41,45 +64,25 @@ def calculate_surprisal(task=4):
     #Save the distribution for later plotting 
     goal_prior_surprisal.to_pickle('goal_priors/goal_prior_distribution_task{}.pkl'.format(task))
 
-    #-- calculate suprisal --#
+    #-- add surprisal column --#
     #Make empty dataframe for populating
     timestep_data_surprisal = pd.DataFrame(columns = timestep_data.columns)
     timestep_data_surprisal['surprisal'] = None
 
-    #Go through each generation (agent) in each simulation / LOD (run)
-    for run in data_fitness['run'].unique():
-        print(run)
-        for agent in data_fitness['agent'].unique():
-            
-            #Reset the counter for minimum surprisal
-            min_surprisal = None
-           
-            #Go through each of the perfect LOD's 
-            for perfect_run in perfect_runs:
-                
-                #Get the goal prior from only the specific perfect run
-                tmp_goal_prior = goal_prior_surprisal[goal_prior_surprisal['run'] == perfect_run].drop('run', axis = 1)
+    #Group dataframe by generation
+    timestep_data_grouped = timestep_data.groupby(['run', 'agent'])
 
-                #Get the data for the current generation and simulation and merge it to get the surprisal at each timestep
-                tmp_data = timestep_data[(timestep_data.run == run) & (timestep_data.agent == agent)].merge(tmp_goal_prior, how = 'left')
+    #Go through each group
+    for name, group in tqdm(timestep_data_grouped):
 
-                #If it is the first of the perfect runs
-                if not min_surprisal:
-                    #Save the average surprisal as the current minimum
-                    min_surprisal = tmp_data['surprisal'].mean()
-                    #save the current data as the one with the lowest surprisal
-                    min_surprisal_data = tmp_data
+        #Find the goal prior which has the lowest KL divergence to this generation
+        min_kl_perfect_run = find_lowest_kl(group, goal_prior_surprisal)
 
-                #If is one of the other perfect runs, check if the average surprisal is lower than the current minimum
-                elif tmp_data['surprisal'].mean() < min_surprisal:
-                    #If it is, override the current minimum surprisal
-                    min_surprisal = tmp_data['surprisal'].mean()
-                    #And override the data too
-                    min_surprisal_data = tmp_data
-            
-            #Append the dataset with surprisal, using the goal prior which gives the lowest surprisal
-            timestep_data_surprisal = timestep_data_surprisal.append(min_surprisal_data)
+        #Merge surprisal form that goal prior unto the dataset
+        tmp_data = group.merge(goal_prior_surprisal[goal_prior_surprisal['run'] == min_kl_perfect_run].drop('run', axis = 1), how = 'left')
 
-    #Save data to csv
-    #timestep_data.to_csv('processed_data/timestep_data_task{}_surprisal.csv'.format(task), index=False)
+        #And append it to the output dataframe
+        timestep_data_surprisal = timestep_data_surprisal.append(tmp_data)
+    
+    #Save the dataset to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)
