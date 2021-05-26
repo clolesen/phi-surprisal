@@ -26,7 +26,6 @@ generate_task_files = function(task){
   LOD_smoothed = average_across_LODs(smoothed_data, fitness_data, paste0("Task ", task))
   LOD_smoothed_data_path = paste0(base_path, "averaged_across_LOD_smoothed_data_task", task, ".csv")
   fwrite(LOD_smoothed, LOD_smoothed_data_path)
-
 }
 
 
@@ -39,7 +38,7 @@ generate_full_average_file = function(){
   
   fitness_task4 = fread("raw_data/fitness_task4.csv")
   
-  data_7fitest = average_across_LODs_by_fitness_group(smoothed_data, fitness_task4, "Task 4 - 7 fittest", "end", group_sizes = c(43,7))
+  data_7fitest = average_across_LODs_by_fitness_group(smoothed_data, fitness_task4, "Task 4 - Perfect", "end", group_sizes = c(45,5))
   data_7fitest = subset(data_7fitest, fitness_group == 2)[,1:16]
   
   data = rbind(data_task1,data_task4, data_7fitest)
