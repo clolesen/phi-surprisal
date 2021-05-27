@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import entropy as kl_divergence
-from tqdm import tqdm
 
 #Only for writing code
 if __name__ == "__main__":
@@ -11,7 +10,9 @@ if __name__ == "__main__":
     task = 4
 
 #Function for finding the minimum kl-divergence
-def find_lowest_kl(timestep_data_group, goal_prior_surprisal):
+def find_lowest_kl(goal_prior_surprisal,**timestep_data_group):
+
+    timestep_data_group = pd.DataFrame.from_dict(timestep_data_group)
 
     #Count how many times each state appeared in each context
     observed_counts = timestep_data_group.groupby(['timestep', 'task_type', 'block_movement', 'sensory_state'])['sensory_state'].agg(probability='count')
@@ -23,13 +24,14 @@ def find_lowest_kl(timestep_data_group, goal_prior_surprisal):
     observed_probabilities = observed_counts.groupby(['timestep', 'task_type', 'block_movement']).apply(lambda x: x / float(x.sum()) ).reset_index()
 
     #Group goal prior by run
-    goal_prior_grouped = goal_prior_surprisal.groupby('run')['surprisal']
+    goal_prior_grouped = goal_prior_surprisal.groupby('perfect_run')['surprisal']
     
     #Get kl divergences to different goal prior
     kl_divergences = goal_prior_grouped.agg(lambda x: kl_divergence(observed_probabilities['probability'], np.exp(-x)))
 
     #Return the goal prior number with the lowest divergence
     return kl_divergences.idxmin()
+
 
 #Function for calculating the surprisal at each timepoint
 def calculate_surprisal(task=4):
@@ -42,7 +44,8 @@ def calculate_surprisal(task=4):
     perfect_runs = list(data_fitness.loc[(data_fitness['agent'] == data_fitness['agent'].max()) & (data_fitness['fitness'] == 1)]['run'])
 
     #Read data
-    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task), 
+                                dtype={"concept_phis": object})
     timestep_data = timestep_data.drop('surprisal', axis=1)
     
     #Create sensory state
@@ -64,25 +67,27 @@ def calculate_surprisal(task=4):
     #Save the distribution for later plotting 
     goal_prior_surprisal.to_pickle('goal_priors/goal_prior_distribution_task{}.pkl'.format(task))
 
-    #-- add surprisal column --#
-    #Make empty dataframe for populating
-    timestep_data_surprisal = pd.DataFrame(columns = timestep_data.columns)
-    timestep_data_surprisal['surprisal'] = None
+    #Rename column to avoid confusion with 'run' when merging
+    goal_prior_surprisal = goal_prior_surprisal.rename(columns = {'run': 'perfect_run'})
 
+    #-- add surprisal column --#
     #Group dataframe by generation
     timestep_data_grouped = timestep_data.groupby(['run', 'agent'])
 
-    #Go through each group
-    for name, group in tqdm(timestep_data_grouped):
+    #Get the perfect run for each group
+    lowest_kl_perfect_runs = timestep_data_grouped.agg(lambda df: find_lowest_kl(goal_prior_surprisal,**df))
 
-        #Find the goal prior which has the lowest KL divergence to this generation
-        min_kl_perfect_run = find_lowest_kl(group, goal_prior_surprisal)
+    #Add the column name
+    lowest_kl_perfect_runs.name = 'perfect_run'
 
-        #Merge surprisal form that goal prior unto the dataset
-        tmp_data = group.merge(goal_prior_surprisal[goal_prior_surprisal['run'] == min_kl_perfect_run].drop('run', axis = 1), how = 'left')
+    #Merge with original dataframe to add the perfect run column
+    timestep_data = timestep_data.merge(lowest_kl_perfect_runs.to_frame(), left_on = ['run', 'agent'], right_on = ['run', 'agent'])
 
-        #And append it to the output dataframe
-        timestep_data_surprisal = timestep_data_surprisal.append(tmp_data)
+    #Merge with goal prior to add the surprisal depending on perfect run, timestep and task context
+    timestep_data = timestep_data.merge(goal_prior_surprisal, 
+                                        how = 'left',
+                                        left_on = ['perfect_run', 'timestep', 'task_type', 'block_movement'],
+                                        right_on = ['perfect_run', 'timestep', 'task_type', 'block_movement'])
     
     #Save the dataset to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)
