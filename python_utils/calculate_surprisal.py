@@ -36,7 +36,7 @@ def find_lowest_kl(goal_prior_surprisal,**timestep_data_group):
 #Function for calculating the surprisal at each timepoint
 def calculate_surprisal(task=4):
     
-    #-- get data --#
+    #-- Get data --#
     #Read fitness datafile
     data_fitness = pd.read_csv('raw_data/fitness_task{}.csv'.format(task))
 
@@ -46,12 +46,13 @@ def calculate_surprisal(task=4):
     #Read data
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task), 
                                 dtype={"concept_phis": object})
-    timestep_data = timestep_data.drop('surprisal', axis=1)
+    #Remove previous versions of the data added in this script
+    timestep_data = timestep_data.drop(['sensory_state', 'perfect_run', 'surprisal'], axis=1, errors = 'ignore')
     
     #Create sensory state
     timestep_data['sensory_state'] = timestep_data['S1'].astype('str') + timestep_data['S2'].astype('str')
 
-    #-- get goal priors --#
+    #-- Get goal priors --#
     #Subset data for only perfect agents on the last generation
     timestep_data_perfect = timestep_data.loc[(timestep_data['run'].isin(perfect_runs)) & (timestep_data['agent'] == timestep_data['agent'].max())]
     
@@ -70,7 +71,7 @@ def calculate_surprisal(task=4):
     #Rename column to avoid confusion with 'run' when merging
     goal_prior_surprisal = goal_prior_surprisal.rename(columns = {'run': 'perfect_run'})
 
-    #-- add surprisal column --#
+    #-- Add surprisal column --#
     #Group dataframe by generation
     timestep_data_grouped = timestep_data.groupby(['run', 'agent'])
 
@@ -86,8 +87,8 @@ def calculate_surprisal(task=4):
     #Merge with goal prior to add the surprisal depending on perfect run, timestep and task context
     timestep_data = timestep_data.merge(goal_prior_surprisal, 
                                         how = 'left',
-                                        left_on = ['perfect_run', 'timestep', 'task_type', 'block_movement'],
-                                        right_on = ['perfect_run', 'timestep', 'task_type', 'block_movement'])
+                                        left_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'],
+                                        right_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'])
     
     #Save the dataset to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)

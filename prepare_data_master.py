@@ -31,22 +31,3 @@ calculate_surprisal(task=task)
 
 # Caluclate Phi
 calculate_phi(task=task)
-
-
-
-
-
-#And for task 1
-task = 1
-
-# Make a csv with run, agent, trial, timestep and node states
-extract_from_MABE(task=task)
-
-# Add task information to the csv
-get_task_info(task=task)
-
-# Calculate goal prior surprisal
-calculate_surprisal(task=task)
-
-# Caluclate Phi
-calculate_phi(task=task)
