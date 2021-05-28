@@ -46,7 +46,7 @@ def calculate_surprisal(task=4):
     #Read data
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task), 
                                 dtype={"concept_phis": object})
-    #Remove previous versions of the data added in this script
+    #Remove previous versions of the data created by this script, if any
     timestep_data = timestep_data.drop(['sensory_state', 'perfect_run', 'surprisal'], axis=1, errors = 'ignore')
     
     #Create sensory state
