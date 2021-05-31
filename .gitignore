@@ -9,3 +9,4 @@ python_utils/actual_agency/*
 */__pycache__
 settings.json
 mabe/*
+pyphi.log

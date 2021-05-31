@@ -38,7 +38,7 @@ def calculate_surprisal(task=4):
     
     #-- Get data --#
     #Read fitness datafile
-    data_fitness = pd.read_csv('raw_data/fitness_task{}.csv'.format(task))
+    data_fitness = pd.read_csv('processed_data/fitness_task{}.csv'.format(task))
 
     #Find the runs with perfect fitness on the last generation
     perfect_runs = list(data_fitness.loc[(data_fitness['agent'] == data_fitness['agent'].max()) & (data_fitness['fitness'] == 1)]['run'])

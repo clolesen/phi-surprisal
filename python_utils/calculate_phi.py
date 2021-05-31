@@ -3,6 +3,7 @@ import os
 
 # Append actual agency path to import names
 sys.path.insert(1, os.getcwd() + '/python_utils/actual_agency')
+sys.path.insert(1, os.getcwd() + '/actual_agency')
 
 # Load libraries
 import actual_agency as agency
