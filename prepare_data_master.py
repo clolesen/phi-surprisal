@@ -29,5 +29,5 @@ get_task_info(task=task)
 # Calculate goal prior surprisal
 calculate_surprisal(task=task)
 
-# Caluclate Phi
+# Caluclate Phi d
 calculate_phi(task=task)
