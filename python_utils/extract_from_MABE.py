@@ -59,7 +59,7 @@ def extract_from_MABE(task=4):
         })
 
     #Save the dataframe
-    fitness_data.to_csv('processed_data/fitness_data_task{}.csv'.format(task), sep=',')
+    fitness_data.to_csv('processed_data/fitness_task{}.csv'.format(task), sep=',')
 
 
     ## - Timestep Data - ##
