@@ -44,8 +44,7 @@ def calculate_surprisal(task=4):
     perfect_runs = list(data_fitness.loc[(data_fitness['agent'] == data_fitness['agent'].max()) & (data_fitness['fitness'] == 1)]['run'])
 
     #Read data
-    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task), 
-                                dtype={"concept_phis": object})
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
     #Remove previous versions of the data created by this script, if any
     timestep_data = timestep_data.drop(['sensory_state', 'perfect_run', 'surprisal'], axis=1, errors = 'ignore')
     
@@ -90,5 +89,8 @@ def calculate_surprisal(task=4):
                                         left_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'],
                                         right_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'])
     
+    #Remove the column with the sensory state
+    timestep_data = timestep_data.drop(['sensory_state'], axis=1)
+
     #Save the dataset to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)

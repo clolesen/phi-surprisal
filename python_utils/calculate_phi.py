@@ -1,98 +1,144 @@
 import sys
 import os
+import pyphi
+import csv 
+import pickle
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
+#Only for writing code
+if __name__ == "__main__":
+    import os
+    os.chdir('..')
+    task = 4
 
 # Append actual agency path to import names
 sys.path.insert(1, os.getcwd() + '/python_utils/actual_agency')
-sys.path.insert(1, os.getcwd() + '/actual_agency')
 
 # Load libraries
 import actual_agency as agency
 from pyanimats import *
 from pyTPM import *
-import pyphi
-import csv 
 
+#pyphi settings
 pyphi.config.VALIDATE_SUBSYSTEM_STATES = False
 pyphi.config.PARTITION_TYPE = 'BI'
 pyphi.config.CUT_ONE_APPROXIMATION = True 
 pyphi.config.PROGRESS_BARS = False
 
+pyphi.config.NUMBER_OF_CORES = -2
+pyphi.config.PARALLEL_CUT_EVALUATION = False
+
+
+## -- Function for calculating phi --##
+def calculate_phi_single_row(state, genome):
+
+    #Create a TPM
+    TPM, TPM_gates, cm = genome2TPM(genome, n_nodes=8, n_sensors=2, n_motors=2, 
+    gate_type='deterministic', states_convention='loli',
+    remove_sensor_motor_effects=True)
+
+    #Get network from the TPM and CM
+    network = pyphi.network.Network(np.array(TPM), cm=np.array(cm), 
+    node_labels=('S1','S2','M1','M2','H1','H2','H3','H4'), purview_cache=None)
+
+    #Find major complex, i.e. the complex with the highest Phi. This complex has potential for consciousness
+    major_complex = pyphi.compute.network.major_complex(network, state)
+
+    #code for getting number of cocnepts and their phi
+    #n_concepts = len(major_complex.ces) #Get value
+    #concept_phis = major_complex.ces.phis #Calculate values
+    #concept_phis = '-'.join([str(elem) for elem in concept_phis]) #Make values into one string
+
+    #Return the Phi of the system
+    return major_complex.phi
+
+
+## -- Memoization --##
+#Make memoize function
+def memoize(f):
+    #Make empty dictionary
+    memo = {}
+    #Create helper function
+    def helper(x, y):
+        #Which checks if the value has already been calculated
+        if (x,tuple(y)) not in memo:
+            #If not, it calculates it and stores it            
+            memo[(x,tuple(y))] = f(x,y)
+        #And then returns the stored answer
+        return memo[x,tuple(y)]
+    return helper
+
+#This puts the memoize function around the phi calculations
+calculate_phi_single_row = memoize(calculate_phi_single_row)
+
+
+
+
+
+## -- Large function --##
 def calculate_phi(task):
 
-    generations = 60000
-    n_agents = int(generations/500.+1)
-    n_runs = 50
-    n_trials = 128
-    n_timeSteps = 35
-
+    #Get in the genomes for the animats
     with open('raw_data/genome_task{}.pkl'.format(task), 'rb') as f:
         all_genomes = pickle.load(f)
 
-    out_file = open('processed_data/timestep_data_task{}_phi.csv'.format(task), "w", newline='')
-    out_writer = csv.writer(out_file)
+    #Read in the dataset
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
 
-    last_agent_id = "nobody"
-    with open("processed_data/timestep_data_task{}.csv".format(task), "r") as data:
-        data_reader = csv.reader(data)
+    #Add a column with the internal states
+    timestep_data['state'] = list(zip(timestep_data.S1, timestep_data.S2, timestep_data.M1, timestep_data.M2,
+                                               timestep_data.H1, timestep_data.H2, timestep_data.H3, timestep_data.H4))
 
-        # Write the column names
-        colnames = next(data_reader) + ["Phi", "n_concepts", "concept_phis"]
-        out_writer.writerow(colnames)
+    #Get the genome at each timestep
+    timestep_data['genome'] = list(map(get_genomes_custom, timestep_data['run'], tqdm(timestep_data['agent'])))
 
-        for row in data_reader:
-            run = int(row[0])
-            agent = int(row[1])
-            trial = int(row[2])
-            timestep = int(row[3])
-            state = tuple(np.array(row[4:12]).astype(int))
+    #Calculate phi at each timestep
+    timestep_data['phi'] = list(map(calculate_phi_single_row, timestep_data['state'], tqdm(timestep_data['genome']))) 
 
-            # Check if it is the same agent as before. For new agents prepare for analysis
-            agent_id = "r"+str(run)+"a"+str(agent)
-            if agent_id != last_agent_id:
-                state_dict = {}
-                genome = agency.get_genome(all_genomes, run, agent)
+    #Remove now unnecessary states
+    timestep_data = timestep_data.drop(['state', 'genome'], axis=1)
 
-                print(agent_id)
-
-                #get TPM and CM from genome
-                TPM, TPM_gates, cm = genome2TPM(genome, n_nodes=8, n_sensors=2, n_motors=2, 
-                    gate_type='deterministic',states_convention='loli',
-                    remove_sensor_motor_effects=True)
-                
-                # Get network from TPM and CM
-                network = pyphi.network.Network(np.array(TPM), cm=np.array(cm), 
-                    node_labels=('S1','S2','M1','M2','H1','H2','H3','H4'), purview_cache=None)
-            # save this agent for next iteration     
-            last_agent_id = agent_id
-
-            if state not in state_dict.keys():
-
-                #Find major complex, i.e. the complex with the highest Phi. This complex has potential for consciousness
-                major_complex = pyphi.compute.network.major_complex(network,state)
-
-                # Number of concepts
-                n_concepts = len(major_complex.ces) #Get value
-                
-                # phi of concepts
-                concept_phis = major_complex.ces.phis #Calculate values
-                concept_phis = '-'.join([str(elem) for elem in concept_phis]) #Make values into one string
-                
-                # Phi of complex
-                Phi = major_complex.phi #Calculate value
-                
-                # Create and entry in the state dictionary
-                state_dict[state] = [n_concepts, concept_phis, Phi]
-                
-            #If the state is in the state dictionary, get values by indexing
-            else:
-                values = state_dict.get(state)
-                n_concepts = values[0]
-                concept_phis = values[1]
-                Phi = values[2]
-            
-            #make list with info
-            line = row + [Phi, n_concepts, concept_phis]
-            out_writer.writerow(line)
+    #Write the data to csv
+    timestep_data.to_csv('processed_data/timestep_data_task{}_phi.csv'.format(task), index=False)
 
 
 
+#Make wrapper function without non-iterable input for mapping later
+def get_genomes_custom(run, agent):
+    return agency.get_genome(all_genomes, run, agent)
+
+
+
+
+
+
+
+
+
+
+from multiprocessing import Pool
+
+pool = Pool(2)
+
+
+
+
+
+
+
+timestep_data_sub['genome'] = list(tqdm(pool.imap(get_genomes_custom, zip(timestep_data_sub['run'], timestep_data_sub['agent']))))
+
+
+
+
+
+
+
+#Data subset
+timestep_data_sub = timestep_data[(timestep_data['run'] == 2) & (timestep_data['agent'].isin([100,101]))]
+#Get the genome at each timestep
+timestep_data_sub['genome'] = list(map(get_genomes_custom, timestep_data_sub['run'], tqdm(timestep_data_sub['agent'])))
+#Calculate phi at each timestep
+timestep_data_sub['phi'] = list(map(calculate_phi_single_row, timestep_data_sub['state'], tqdm(timestep_data_sub['genome'])))
