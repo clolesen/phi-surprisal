@@ -22,15 +22,15 @@ task = 4
 
 # Make a csv with run, agent, trial, timestep and node states
 print('extract from MABE')
-extract_from_MABE(task=task)
+#extract_from_MABE(task=task)
 
 # Add task information to the csv
 print('get task information')
-get_task_info(task=task)
+#get_task_info(task=task)
 
 # Calculate goal prior surprisal
 print('calculate surprisal')
-calculate_surprisal(task=task)
+#calculate_surprisal(task=task)
 
 # Caluclate Phi
 print('calculate phi')
