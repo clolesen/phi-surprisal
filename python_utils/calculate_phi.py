@@ -26,7 +26,6 @@ pyphi.config.PARTITION_TYPE = 'BI'
 pyphi.config.CUT_ONE_APPROXIMATION = True 
 pyphi.config.PROGRESS_BARS = False
 
-pyphi.config.NUMBER_OF_CORES = -2
 pyphi.config.PARALLEL_CUT_EVALUATION = False
 
 
