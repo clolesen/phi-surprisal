@@ -34,13 +34,13 @@ def memoize_get_genome(f):
     #Make empty dictionary
     memo = {}
     #Create helper function
-    def helper(x, y):
+    def helper(run,agent):
         #Which checks if the value has already been calculated
-        if (x,y) not in memo:
+        if (run,agent) not in memo:
             #If not, it calculates it and stores it            
-            memo[(x,y)] = f(x,y)
+            memo[(run,agent)] = f(run,agent)
         #And then returns the stored answer
-        return memo[x,y]
+        return memo[run,agent]
     return helper
 
 #Memoization decorator for the calculate_phi function
@@ -48,13 +48,13 @@ def memoize_calculate_phi(f):
     #Make empty dictionary
     memo = {}
     #Create helper function
-    def helper(x, y):
+    def helper(state,run,agent):
         #Which checks if the value has already been calculated
-        if (x,tuple(y)) not in memo:
+        if (state,run,agent) not in memo:
             #If not, it calculates it and stores it            
-            memo[(x,tuple(y))] = f(x,y)
+            memo[(state,run,agent)] = f(state,run,agent)
         #And then returns the stored answer
-        return memo[x,tuple(y)]
+        return memo[state,run,agent]
     return helper
 
 ## -- Large function --##
@@ -79,13 +79,12 @@ def calculate_phi(task):
     #Make the function memoizing to prevent repeated calculations
     get_genomes_custom = memoize_get_genome(get_genomes_custom)
 
-    #Get the genome at each timestep
-    timestep_data['genome'] = list(map(get_genomes_custom, timestep_data['run'], tqdm(timestep_data['agent'])))
-
-
     #Function for calculating phi
-    def calculate_phi_single_row(state, genome):
+    def calculate_phi_single_row(state, run, agent):
 
+        #Get the genome for the current run and agent
+        genome = get_genomes_custom(run, agent)
+        
         #Create a TPM
         TPM, TPM_gates, cm = genome2TPM(genome, n_nodes=8, n_sensors=2, n_motors=2, 
         gate_type='deterministic', states_convention='loli',
@@ -109,13 +108,13 @@ def calculate_phi(task):
     #Wrap the function in the memoize function 
     calculate_phi_single_row = memoize_calculate_phi(calculate_phi_single_row)
 
+
     #Calculate phi at each timestep (use tqdm for a progress bar)
-    timestep_data['phi'] = list(map(calculate_phi_single_row, timestep_data['state'], 
-                                tqdm(timestep_data['genome'], mininterval = 5))) 
+    timestep_data['phi'] = list(map(calculate_phi_single_row, timestep_data['state'], timestep_data['run'],
+                                tqdm(timestep_data['agent'], mininterval = 3))) 
 
-
-    #Remove now unnecessary states
-    timestep_data = timestep_data.drop(['state', 'genome'], axis=1)
+    #Remove now unnecessary column
+    timestep_data = timestep_data.drop(['state'], axis=1)
 
     #Write the data to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}_phi.csv'.format(task), index=False)
