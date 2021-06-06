@@ -64,8 +64,8 @@ def calculate_surprisal(task=4):
     #Transform counts into probabilities
     goal_prior_surprisal = counts.groupby(['run', 'timestep', 'task_type', 'block_movement']).apply(lambda x: - np.log(x / float(x.sum())) ).reset_index()
 
-    #Save the distribution for later plotting 
-    goal_prior_surprisal.to_pickle('goal_priors/goal_prior_distribution_task{}.pkl'.format(task))
+    #Save the goal prior distribution for later plotting 
+    goal_prior_surprisal.to_csv('processed_data/goal_prior_distribution_task{}.csv'.format(task))
 
     #Rename column to avoid confusion with 'run' when merging
     goal_prior_surprisal = goal_prior_surprisal.rename(columns = {'run': 'perfect_run'})
@@ -89,8 +89,9 @@ def calculate_surprisal(task=4):
                                         left_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'],
                                         right_on = ['perfect_run', 'timestep', 'task_type', 'block_movement', 'sensory_state'])
     
-    #Remove the column with the sensory state
+    #Remove the now unnecessary column with the sensory state 
     timestep_data = timestep_data.drop(['sensory_state'], axis=1)
 
     #Save the dataset to csv
     timestep_data.to_csv('processed_data/timestep_data_task{}.csv'.format(task), index=False)
+    
