@@ -15,21 +15,20 @@ average_timestep_data = function(data) {
       # subset data
       d = data[data$run==r & data$agent==a,] 
       
-      # split concept phi string and convert to list of numbers
-      ConPhi_list = c()
-      for (x in d$concept_phis){
-        ConPhi = as.numeric(strsplit(x, "-")[[1]])
-        ConPhi_list = c(ConPhi_list,ConPhi)
-      }
+      # # split concept phi string and convert to list of numbers
+      # ConPhi_list = c()
+      # for (x in d$concept_phis){
+      #   ConPhi = as.numeric(strsplit(x, "-")[[1]])
+      #   ConPhi_list = c(ConPhi_list,ConPhi)
+      # }
       
       # make data frame of mean and max values and put them in the list
       sum_data_list[[i]] = data.frame(run = r, agent = a,
                                       Phi_mean = mean(d$Phi), Phi_max = max(d$Phi),
-                                      n_concepts_mean = mean(d$n_concepts), n_concepts_max = max(d$n_concepts),
-                                      concept_phi_mean = mean(ConPhi_list), concept_phi_max = max(ConPhi_list),
+                                      # n_concepts_mean = mean(d$n_concepts), n_concepts_max = max(d$n_concepts),
+                                      # concept_phi_mean = mean(ConPhi_list), concept_phi_max = max(ConPhi_list),
                                       
-                                      surprisal_mean = mean(d$surprisal),
-                                      surprisal_max = max(d$surprisal)
+                                      surprisal_mean = mean(d$surprisal),surprisal_max = max(d$surprisal)
                                       
                                       
       )
@@ -42,8 +41,8 @@ average_timestep_data = function(data) {
   sum_data = do.call("rbind", sum_data_list)
   
   # take care of unwanted values 
-  sum_data$concept_phi_mean[is.nan(sum_data$concept_phi_mean)] = 0
-  sum_data$concept_phi_max[is.infinite(sum_data$concept_phi_max)] = 0
+  #sum_data$concept_phi_mean[is.nan(sum_data$concept_phi_mean)] = 0
+  #sum_data$concept_phi_max[is.infinite(sum_data$concept_phi_max)] = 0
   
   sum_data = sum_data[complete.cases(sum_data),]
   

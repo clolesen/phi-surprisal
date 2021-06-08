@@ -110,7 +110,7 @@ def calculate_phi(task):
 
 
     #Calculate phi at each timestep (use tqdm for a progress bar)
-    timestep_data['phi'] = list(map(calculate_phi_single_row, timestep_data['state'], timestep_data['run'],
+    timestep_data['Phi'] = list(map(calculate_phi_single_row, timestep_data['state'], timestep_data['run'],
                                 tqdm(timestep_data['agent'], mininterval = 3))) 
 
     #Remove now unnecessary column
