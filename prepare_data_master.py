@@ -17,17 +17,21 @@ from calculate_surprisal import calculate_surprisal
 from calculate_phi import calculate_phi
 
 # settings
-task = sys.argv[1]
+#task = sys.argv[1]
 task = 4
 
 # Make a csv with run, agent, trial, timestep and node states
-extract_from_MABE(task=task)
+print('extract from MABE')
+#extract_from_MABE(task=task)
 
 # Add task information to the csv
-get_task_info(task=task)
+print('get task information')
+#get_task_info(task=task)
 
 # Calculate goal prior surprisal
-calculate_surprisal(task=task)
+print('calculate surprisal')
+#calculate_surprisal(task=task)
 
 # Caluclate Phi
+print('calculate phi')
 calculate_phi(task=task)

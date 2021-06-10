@@ -5,13 +5,14 @@ import pandas as pd
 if __name__ == "__main__":
     import os
     os.chdir('..')
-    task = 1
+    task = 4
 
 
 def get_task_info(task):
 
     # Read in the dataframe
-    data_timestep = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
+    timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task), 
+                            dtype={"concept_phis": object})
 
     # 1 set consists of 16 trials of 33 timesteps
     n_trials = 16
@@ -27,25 +28,25 @@ def get_task_info(task):
         set_length + [6] * 2*set_length + [5] * 2*set_length
 
     # Each column is filled out with the patterns specified above
-    data_timestep['block_movement'] = np.resize(block_movement, data_timestep.shape[0])
-    data_timestep['task_type'] = np.resize(task_type, data_timestep.shape[0])
-    data_timestep['block_size'] = np.resize(block_size, data_timestep.shape[0])
+    timestep_data['block_movement'] = np.resize(block_movement, timestep_data.shape[0])
+    timestep_data['task_type'] = np.resize(task_type, timestep_data.shape[0])
+    timestep_data['block_size'] = np.resize(block_size, timestep_data.shape[0])
 
     #Make a column showing when the animat sees the block
-    data_timestep['is_seeing'] = data_timestep[['S1','S2']].max(axis=1)
+    timestep_data['is_seeing'] = timestep_data[['S1','S2']].max(axis=1)
 
     # Make empty column to populate the first time the animat sees the block
-    data_timestep['first_sight'] = 0
+    timestep_data['first_sight'] = 0
     #Get indeces for when the animat sees the block the first time
-    first_sight_idx = data_timestep.groupby(['run', 'agent', 'trial'])['is_seeing'].idxmax()
+    first_sight_idx = timestep_data.groupby(['run', 'agent', 'trial'])['is_seeing'].idxmax()
     #Change the first_sight column to 1 at those places
-    data_timestep.loc[first_sight_idx, 'first_sight'] = 1
+    timestep_data.loc[first_sight_idx, 'first_sight'] = 1
 
     # Drop the is_seeing column now that is unneeded
-    data_timestep = data_timestep.drop(['is_seeing'], axis = 1)
+    timestep_data = timestep_data.drop(['is_seeing'], axis = 1)
 
     # Save the csv
-    data_timestep.to_csv(
+    timestep_data.to_csv(
         'processed_data/timestep_data_task{}.csv'.format(task), index=False)
 
 

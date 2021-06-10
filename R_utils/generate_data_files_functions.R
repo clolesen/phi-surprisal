@@ -9,13 +9,23 @@ generate_task_files = function(task){
   timestep_data_path = paste0(base_path, "timestep_data_task", task, ".csv")
   timestep_data = fread(timestep_data_path)
   
-  fitness_data_path = paste0("raw_data/fitness_task", task, ".csv")
+  fitness_data_path = paste0(base_path, "fitness_task", task, ".csv")
   fitness_data = fread(fitness_data_path)
   
   # PROCESS DATA
   
   # Averaging
-  average_data = average_timestep_data(timestep_data)
+  
+  ##Peter Did This!
+  average_data <- timestep_data %>%
+    group_by(run, agent) %>%
+    summarize(Phi_mean = mean(Phi),
+              Phi_max = max(Phi),
+              surprisal_mean = mean(surprisal),
+              surprisal_max = max(surprisal)
+    )
+  
+  # average_data = average_timestep_data(timestep_data)
   average_data_path = paste0(base_path, "averaged_across_timestep_data_task", task, ".csv")
   fwrite(average_data, average_data_path)
   
@@ -36,7 +46,7 @@ generate_full_average_file = function(){
   averaged_data = fread("processed_data/averaged_across_timestep_data_task4.csv")
   smoothed_data = smoothing_average_data(as.data.frame(averaged_data))
   
-  fitness_task4 = fread("raw_data/fitness_task4.csv")
+  fitness_task4 = fread("processed_data/fitness_task4.csv")
   
   data_7fitest = average_across_LODs_by_fitness_group(smoothed_data, fitness_task4, "Task 4 - Perfect", "end", group_sizes = c(45,5))
   data_7fitest = subset(data_7fitest, fitness_group == 2)[,1:16]
