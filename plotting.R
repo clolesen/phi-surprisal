@@ -16,9 +16,6 @@ goal_prior_task4 = fread("goal_priors/goal_prior_distribution_task4.csv", colCla
 fitness_task1 = fread("raw_data/fitness_task1.csv")
 fitness_task4 = fread("raw_data/fitness_task4.csv")
 
-# Average trial data
-average_trial_data_task4 = fread("processed_data/averaged_trial_data_task4.csv")
-average_trial_data_task1 = fread("processed_data/averaged_trial_data_task1.csv")
 
 #### AVERAGE PLOTS ####
 
@@ -205,6 +202,19 @@ ggsave(
 )
 
 
+test_data = subset(time_series_data, task == "Task 4" & lag == 0 & agent ==120)
+trial_type = c()
+for(i in 1:8) trial_type = c(trial_type, rep(i,16))
+
+test_data$trial_type = mapvalues(test_data$trial, from = 0:127, to = trial_type)
+test_data$start_position = mapvalues(test_data$trial, from = 0:127, to = rep(1:16,8))
+
+ggplot(test_data, aes(x = cor))+
+  geom_density() +
+  facet_wrap(~run) +
+  geom_vline(xintercept = 0) +
+  lims(y = c(0,6))
+
 #### GOAL PRIOR PLOTS ####
 
 ggsave(
@@ -212,6 +222,7 @@ ggsave(
   make_goal_prior_plot(goal_prior_task4),
   width = 13, height = 10 
 )
+
 
 
 #### AVERAGE TRIAL PLOTS ####
@@ -227,6 +238,7 @@ ggsave(
   average_trial_all_runs_plot(timestep_data_task4, time_series_data),
   width = 15, height = 12
 )
+
 
 
 #Stop
