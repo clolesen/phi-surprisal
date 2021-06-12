@@ -189,7 +189,7 @@ ggsave(
 ggsave(
   "plots/goal_prior_plot.jpg",
   make_goal_prior_plot(goal_prior_task4),
-  width = 13, height = 10 
+  width = 13, height = 14 
 )
 
 
