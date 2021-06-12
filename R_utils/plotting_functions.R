@@ -29,7 +29,7 @@ make_average_plot_data = function(data, variable, seperator){
   
   
   plot_data = data.table(
-    x = data$generation * 500,
+    x = data$agent * 500,
     y = y,
     se_min = y - se,
     se_max = y + se,
