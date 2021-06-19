@@ -29,7 +29,7 @@ make_average_plot_data = function(data, variable, seperator){
   
   
   plot_data = data.table(
-    x = data$generation * 500,
+    x = data$agent * 500,
     y = y,
     se_min = y - se,
     se_max = y + se,
@@ -596,6 +596,13 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   
   data = do.call(rbind, split_data)
   
+  data = merge(data, time_series_data, by = c("run", "trial"))
+  data$trial_profile = NA
+  data$trial_profile[data$cor<(-0.1)] = "trial_Negative"
+  data$trial_profile[data$cor>(-0.1)&data$cor<0.1] = "trial_Neutral"
+  data$trial_profile[data$cor>0.1] = "trial_Positive"
+  
+  
   profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
   profile_data$profile = NA
   profile_data$profile[profile_data$cor<(-0.1)] = "Negative"
@@ -606,7 +613,7 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   data_list = list()
   i = 1
   
-  for(group in c("all", "perfect", "Negative", "Neutral", "Positive")){
+  for(group in c("all", "perfect", "Negative", "Neutral", "Positive", "trial_Negative", "trial_Neutral", "trial_Positive")){
     
     use_data = data
     
@@ -628,6 +635,10 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
     if(group == "Positive"){
       runs = profile_data[profile_data$profile == "Positive",]$run
       use_data = subset(use_data, run %in% runs)
+    }
+    
+    if(group %in% c("trial_Negative", "trial_Neutral", "trial_Positive")){
+      use_data = subset(use_data, trial_profile == group)
     }
     
     average_data = average_across_trials(use_data)
@@ -700,6 +711,9 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   profile_data = subset(task4_data, group %in% c("Negative", "Neutral", "Positive"))
   profile_data$seperator = profile_data$group
   
+  trial_profile_data = subset(task4_data, group %in% c("trial_Negative", "trial_Neutral", "trial_Positive"))
+  trial_profile_data$seperator = trial_profile_data$group
+  
   task1_data= subset(task1_data, group == "all" )
   task4_data_perfect = subset(task4_data, group == "perfect" )
   task4_data= subset(task4_data, group == "all" )
@@ -760,3 +774,4 @@ average_trial_all_runs_plot = function(data, time_series_data){
 
 
 profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]
+table(trial_profile_data$group)

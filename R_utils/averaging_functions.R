@@ -1,107 +1,18 @@
-average_timestep_data = function(data) {
+smooth = function(input){
   
-  i = 1
-  sum_data_list = list()
+  window_size = 6
+  output = 0:120
   
-  runs = unique(data$run)
-  agents = unique(data$agent)
-  
-  for (r in runs) {
-    for (a in agents){
-      
-      # Give message of progress
-      cat("\rRun:",r,"- Agent:",a,"     ")
-      
-      # subset data
-      d = data[data$run==r & data$agent==a,] 
-      
-      # # split concept phi string and convert to list of numbers
-      # ConPhi_list = c()
-      # for (x in d$concept_phis){
-      #   ConPhi = as.numeric(strsplit(x, "-")[[1]])
-      #   ConPhi_list = c(ConPhi_list,ConPhi)
-      # }
-      
-      # make data frame of mean and max values and put them in the list
-      sum_data_list[[i]] = data.frame(run = r, agent = a,
-                                      Phi_mean = mean(d$Phi), Phi_max = max(d$Phi),
-                                      # n_concepts_mean = mean(d$n_concepts), n_concepts_max = max(d$n_concepts),
-                                      # concept_phi_mean = mean(ConPhi_list), concept_phi_max = max(ConPhi_list),
-                                      
-                                      surprisal_mean = mean(d$surprisal),surprisal_max = max(d$surprisal)
-                                      
-                                      
-      )
-      
-      i = i + 1
-    } # end loop through agents
-  } # end loop through runs
-  
-  # row bind all data frames in the list (to get one combined data frame)
-  sum_data = do.call("rbind", sum_data_list)
-  
-  # take care of unwanted values 
-  #sum_data$concept_phi_mean[is.nan(sum_data$concept_phi_mean)] = 0
-  #sum_data$concept_phi_max[is.infinite(sum_data$concept_phi_max)] = 0
-  
-  sum_data = sum_data[complete.cases(sum_data),]
-  
-  # Give message of progress
-  cat("\rDone :)                      ")
-  
-  return(sum_data)
-}
-
-smoothing_average_data = function(data, window_size = 6){
-  
-  #Make empty list for filling in the data
-  data_list = list()
-  runs = unique(data$run)
-  runs = runs[order(runs)]
-  
-  #Go through each of the sub-data frames
-  for (i in runs) {
-    
-    # Give message of progress
-    cat("\rRun:",i,"     ")
-    
-    df_sub = subset(data, run == i)
-    
-    #Make a new empty version of it for filling in smoothed data
-    df_sub_smooth <- df_sub[FALSE,]
-    
-    #Go through each row and all columns except the last 2 (task and generation)
-    for (r in 1:nrow(df_sub)){
-      for (c in 3:(ncol(df_sub))){
-        
-        #For those data points above the window size
-        if (r>window_size){
-          
-          #Average within the window
-          df_sub_smooth[r,c] = mean(df_sub[(r-window_size):r,c])
-          
-          #For others
-        } else {
-          
-          #Average from beginning
-          df_sub_smooth[r,c] = mean(df_sub[1:r,c])
-        }
-        
-        #Also save the task and generation data
-        df_sub_smooth[r, 1:2] = df_sub[r, 1:2]
-      }
-    }
-    #Add the sub-data frame to the output
-    data_list[[i+1]] = df_sub_smooth
+  if (!(all(input == output))){
+    for (i in 1:length(input)) output[i] = ifelse(i>window_size, 
+                                                  mean(input[(i-window_size):i]),
+                                                  mean(input[1:i])
+    )
   }
   
-  smoothed_data = do.call(rbind, data_list)
-  
-  # Give message of progress
-  cat("\rDone     ")
-  
-  return(smoothed_data)
+  return(output)
 }
+
 
 average_across_LODs = function(averaged_data, fitness_data, task) {
   

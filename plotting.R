@@ -10,29 +10,14 @@ averaged_data = fread("processed_data/full_average_data.csv")
 time_series_data = fread("processed_data/time_series_surprisal_Phi_combined.csv")
 
 # Goal prior
-goal_prior_task4 = fread("goal_priors/goal_prior_distribution_task4.csv", colClasses = c('sensory_state'='character'))
+goal_prior_task4 = fread("processed_data/goal_prior_distribution_task4.csv", colClasses = c('sensory_state'='character'))
 
 # Fitness data
-fitness_task1 = fread("raw_data/fitness_task1.csv")
-fitness_task4 = fread("raw_data/fitness_task4.csv")
+fitness_task1 = fread("processed_data/fitness_task1.csv")
+fitness_task4 = fread("processed_data/fitness_task4.csv")
 
-# Average trial data
-average_trial_data_task4 = fread("processed_data/averaged_trial_data_task4.csv")
-average_trial_data_task1 = fread("processed_data/averaged_trial_data_task1.csv")
 
 #### AVERAGE PLOTS ####
-
-# Replication plot
-ggsave(
-  "plots/replicate_plot.jpg",
-  ggpubr::ggarrange(
-    make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
-    make_LOD_plot(averaged_data, "n_concepts", y_label = "Average number of concepts", seperator = "task"),
-    make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
-    labels = "auto",
-    ncol = 3, common.legend = T
-  ), width = 7.5, height = 3
-)
 
 # Average LOD plot
 ggsave(
@@ -54,10 +39,10 @@ ggsave(
 end_fitness = subset(fitness_task4, agent == 120)
 
 #worst
-end_fitness[end_fitness$fitness==min(end_fitness$fitness)] # RUN 10
+end_fitness[end_fitness$fitness==min(end_fitness$fitness)] # RUN 99
 
 # Perfect
-end_fitness[end_fitness$fitness==1] #  RUN 14 29 33 34 49
+end_fitness[end_fitness$fitness==1] #  RUN 14 29 33 34 49 68 89 96
 
 # Worst and best plot
 ggsave("plots/timestep_worst_perfect.jpg",
@@ -65,7 +50,7 @@ ggsave("plots/timestep_worst_perfect.jpg",
          make_timestep_plot(
            data = timestep_data_task4, 
            fitness_data = fitness_task4,
-           runs = 10, agents = c(10,50,90)-1, trials = 36
+           runs = 99, agents = c(10,50,90)-1, trials = 36
          ),
          make_timestep_plot(
            data = timestep_data_task4,
@@ -183,11 +168,12 @@ ggsave(
 
 ggsave(
   "plots/time_series_density_-6_5_last_generation.jpg",
-  make_time_series_plot(subset(time_series_data, agent == 120), range = -6:5, seperator = "task"),
+  make_time_series_plot(time_series_data[agent == 120], range = -6:5, seperator = "task"),
   width = 7.5, height = 6
 )
 
-time_series_data_perfect_task4 = subset(time_series_data, run %in% c(14, 29, 33, 34, 49) & task == "Task 4")
+perfects = fitness_task4[agent==120 & fitness==1, run]
+time_series_data_perfect_task4 = time_series_data[run %in% perfects & task == "Task 4"]
 time_series_data_perfect_task4$task = "Task 4 - Perfect"
 time_series_data_perfect_task4 = rbind(time_series_data, time_series_data_perfect_task4)
 
@@ -198,20 +184,14 @@ ggsave(
 )
 
 
-ggsave(
-  "plots/time_series_density_-6_5_average_LOD.jpg",
-  make_time_series_plot(time_series_data, range = -6:5, seperator = "task", average_LOD = T),
-  width = 7.5, height = 6
-)
-
-
 #### GOAL PRIOR PLOTS ####
 
 ggsave(
   "plots/goal_prior_plot.jpg",
   make_goal_prior_plot(goal_prior_task4),
-  width = 13, height = 10 
+  width = 13, height = 14 
 )
+
 
 
 #### AVERAGE TRIAL PLOTS ####
@@ -227,6 +207,7 @@ ggsave(
   average_trial_all_runs_plot(timestep_data_task4, time_series_data),
   width = 15, height = 12
 )
+
 
 
 #Stop

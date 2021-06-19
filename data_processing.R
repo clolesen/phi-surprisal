@@ -11,12 +11,14 @@ generate_full_average_file()
 # Make cross correlation between surprisal and Phi
 # Task 1
 timestep_data_task1 = fread("processed_data/timestep_data_task1.csv")
-time_series_surprisal_Phi = time_series(timestep_data_task1, 16, base_variable = "surprisal", lag_variable = "Phi")
+
+time_series_surprisal_Phi = timestep_data_task1[, time_series2(surprisal, Phi), by = .(run, agent, trial)]
 fwrite(time_series_surprisal_Phi, "processed_data/time_series_surprisal_Phi_task1.csv")
 
 # Task 4
 timestep_data_task4 = fread("processed_data/timestep_data_task4.csv")
-time_series_surprisal_Phi = time_series(timestep_data_task4, 16, base_variable = "surprisal", lag_variable = "Phi")
+
+time_series_surprisal_Phi = timestep_data_task4[, time_series2(surprisal, Phi), by = .(run, agent, trial)]
 fwrite(time_series_surprisal_Phi, "processed_data/time_series_surprisal_Phi_task4.csv")
 
 #Combine
