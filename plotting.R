@@ -31,8 +31,6 @@ ggsave(
   ), width = 7.5, height = 3
 )
 
-ggplot(timestep_data_task4[,.(Phi_mean = mean(Phi)), by = .(run,agent)], aes(y = Phi, x = agent)) +
-  
 
 #### TIMESTEP PLOTS ####
 
@@ -204,7 +202,6 @@ ggsave(
   average_trial_all_runs_plot(timestep_data_task4, time_series_data),
   width = 15, height = 12
 )
-
 
 
 #Stop
