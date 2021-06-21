@@ -26,11 +26,11 @@ print('extract from MABE')
 
 # Add task information to the csv
 print('get task information')
-#get_task_info(task=task)
+get_task_info(task=task)
 
 # Calculate goal prior surprisal
 print('calculate surprisal')
-#calculate_surprisal(task=task)
+calculate_surprisal(task=task)
 
 # Caluclate Phi
 print('calculate phi')

@@ -47,8 +47,8 @@ def calculate_surprisal(task=4):
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
     #Remove previous versions of the data created by this script, if any
     timestep_data = timestep_data.drop(['sensory_state', 'perfect_run', 'surprisal'], axis=1, errors = 'ignore')
-    
-    #Create sensory state
+
+    #Create sensory state column
     timestep_data['sensory_state'] = timestep_data['S1'].astype('str') + timestep_data['S2'].astype('str')
 
     #-- Get goal priors --#
