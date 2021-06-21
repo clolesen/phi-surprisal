@@ -12,13 +12,15 @@ generate_full_average_file()
 # Task 1
 timestep_data_task1 = fread("processed_data/timestep_data_task1.csv")
 
-time_series_surprisal_Phi = timestep_data_task1[, time_series2(surprisal, Phi), by = .(run, agent, trial)]
+time_series_surprisal_Phi = timestep_data_task1[agent == 120, time_series(surprisal, Phi), by = .(run, agent, trial)]
+time_series_surprisal_Phi = time_series_surprisal_Phi[complete.cases(time_series_surprisal_Phi)]
 fwrite(time_series_surprisal_Phi, "processed_data/time_series_surprisal_Phi_task1.csv")
 
 # Task 4
 timestep_data_task4 = fread("processed_data/timestep_data_task4.csv")
 
-time_series_surprisal_Phi = timestep_data_task4[, time_series2(surprisal, Phi), by = .(run, agent, trial)]
+time_series_surprisal_Phi = timestep_data_task4[agent == 120, time_series(surprisal, Phi), by = .(run, agent, trial)]
+time_series_surprisal_Phi = time_series_surprisal_Phi[complete.cases(time_series_surprisal_Phi)]
 fwrite(time_series_surprisal_Phi, "processed_data/time_series_surprisal_Phi_task4.csv")
 
 #Combine
