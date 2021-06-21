@@ -166,11 +166,6 @@ ggsave(
   width = 7.5, height = 6
 )
 
-ggsave(
-  "plots/time_series_density_-6_5_last_generation.jpg",
-  make_time_series_plot(time_series_data[agent == 120], range = -6:5, seperator = "task"),
-  width = 7.5, height = 6
-)
 
 perfects = fitness_task4[agent==120 & fitness==1, run]
 time_series_data_perfect_task4 = time_series_data[run %in% perfects & task == "Task 4"]
@@ -207,7 +202,6 @@ ggsave(
   average_trial_all_runs_plot(timestep_data_task4, time_series_data),
   width = 15, height = 12
 )
-
 
 
 #Stop

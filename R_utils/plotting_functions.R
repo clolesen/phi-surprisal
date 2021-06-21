@@ -583,13 +583,13 @@ average_across_trials = function(data){
 
 make_average_trial_data = function(data, fitness_data, time_series_data, task_number){
   
-  data = subset(data, agent == 120)
-  time_series_data = subset(time_series_data, agent == 120 & task == paste("Task",task_number) & lag == 0)
+  data = data[agent==120]
+  time_series_data = time_series_data[agent == 120 & task == paste("Task",task_number) & lag == 0]
   
   # make event-related timestep column
   data$trial_id = paste0("r", data$run, "a", data$agent, "t", data$trial)
   split_data = split(data, data$trial_id)
-  
+
   for (i in 1:length(split_data)){
     split_data[[i]]$event_timestep = split_data[[i]]$timestep - which(split_data[[i]]$first_sight==1)
   }
@@ -602,8 +602,7 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   data$trial_profile[data$cor>(-0.1)&data$cor<0.1] = "trial_Neutral"
   data$trial_profile[data$cor>0.1] = "trial_Positive"
   
-  
-  profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
+  profile_data = time_series_data[,.(cor=mean(cor, na.rm=T)), by = run]
   profile_data$profile = NA
   profile_data$profile[profile_data$cor<(-0.1)] = "Negative"
   profile_data$profile[profile_data$cor>(-0.1)&profile_data$cor<0.1] = "Neutral"
@@ -750,7 +749,7 @@ average_trial_all_runs_plot = function(data, time_series_data){
   
   data = do.call(rbind, split_data)
   
-  time_series_data = subset(time_series_data, agent == 120 & task == "Task 4" & lag == 0)
+  time_series_data = subset(time_series_data, task == "Task 4" & lag == 0 & run == 1)
   
   profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
   profile_data$profile = NA
@@ -771,6 +770,10 @@ average_trial_all_runs_plot = function(data, time_series_data){
     scale_color_manual(values = c("#6B00B9","#989898","#8D391E"))
   return(plot)
 }
+
+
+
+
 
 
 profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]
