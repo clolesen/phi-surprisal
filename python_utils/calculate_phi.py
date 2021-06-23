@@ -63,6 +63,9 @@ def calculate_phi(task):
     #Read in the timestep dataset
     timestep_data = pd.read_csv('processed_data/timestep_data_task{}.csv'.format(task))
 
+    #Remove old version of Phi if present
+    timestep_data = timestep_data.drop('Phi', axis = 1, errors='ignore')
+
     #Add a column with the state of the animat's Markov Brain
     timestep_data['state'] = list(zip(timestep_data.S1, timestep_data.S2, timestep_data.M1, timestep_data.M2,
                                                timestep_data.H1, timestep_data.H2, timestep_data.H3, timestep_data.H4))
