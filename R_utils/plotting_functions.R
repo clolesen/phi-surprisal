@@ -749,7 +749,7 @@ average_trial_all_runs_plot = function(data, time_series_data){
   
   data = do.call(rbind, split_data)
   
-  time_series_data = subset(time_series_data, task == "Task 4" & lag == 0 & run == 1)
+  time_series_data = subset(time_series_data, task == "Task 4" & lag == 0)
   
   profile_data = dplyr::summarise(group_by(time_series_data, run), cor = mean(cor))
   profile_data$profile = NA
@@ -770,10 +770,6 @@ average_trial_all_runs_plot = function(data, time_series_data){
     scale_color_manual(values = c("#6B00B9","#989898","#8D391E"))
   return(plot)
 }
-
-
-
-
 
 
 profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]
