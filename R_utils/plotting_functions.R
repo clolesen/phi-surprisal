@@ -39,7 +39,13 @@ make_average_plot_data = function(data, variable, seperator){
   return(plot_data)
 }
 
-LOD_plot = function(plot_data, y_label, x_label, title){
+LOD_plot = function(plot_data, y_label, x_label, title, seperator){
+  
+  if(seperator == "profile"){
+    color_palette = c("#6B00B9","#989898","#8D391E")
+    colors = scale_color_manual(values = color_palette)
+    fills = scale_fill_manual(values = color_palette)
+  }
   
   plot = ggplot(plot_data, aes(x = x, y = y)) +
     geom_ribbon(aes(ymin = se_min, ymax = se_max, fill = seperator), color = F, alpha = 0.1) +
@@ -55,7 +61,7 @@ make_LOD_plot = function(data, variable, y_label = " ", x_label = "Generation", 
   
   plot_data = make_average_plot_data(data, variable, seperator)
   
-  plot = LOD_plot(plot_data, y_label, x_label, title)
+  plot = LOD_plot(plot_data, y_label, x_label, title, seperator)
   
   return(plot)
 }
@@ -224,7 +230,7 @@ add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
   return(plot)           
 }
 
-make_timestep_plot = function(data, fitness_data, 
+make_timestep_plot = function(data, fitness_data, time_series_data,
                               line_variables = c("surprisal", "Phi"),
                               line_names = c("Surprisal", "Phi"),
                               tile_variables = c("S2", "S1", "M1", "M2"),
@@ -267,7 +273,7 @@ make_timestep_plot = function(data, fitness_data,
       agent = data$agent[1] #str_split(data$agent[1], " ")[[1]][2]
       run = data$run[1] #str_split(data$run[1], " ")[[1]][2]
       trial = data$trial[1] #str_split(data$trial[1], " ")[[1]][2]
-      LOD_fitness = round(subset(fitness_data, agent==120 & run==data$run[1])$fitness, 2)
+      correlation = round(time_series_data[run==data$run[1] & trial == data$trial[1] & lag==0 & task == "Task 4", cor], 2)
       animat_fitness = round(subset(fitness_data, agent==data$agent[1] & run==data$run[1])$fitness, 2)
       
       var = eval(parse(text=paste0("data$", facet_variables, "[1]")))
@@ -281,7 +287,7 @@ make_timestep_plot = function(data, fitness_data,
         label2 = paste("LOD:", run+1,
                        "\nGeneration:", agent*500,
                        "\nAnimat fitness:", animat_fitness,
-                       "\nEnd of LOD fitness:", LOD_fitness
+                       "\nCorrelation:", correlation
                       ),
         var = var
       )
@@ -312,7 +318,7 @@ make_timestep_plot = function(data, fitness_data,
 }
 
 
-make_timestep_multi_plot = function(data, fitness_data, trial_list, n_col = 2, n_row = 3){
+make_timestep_multi_plot = function(data, fitness_data, time_series_data, trial_list, n_col = 2, n_row = 3){
   
   plot_list = list()
   
@@ -321,6 +327,7 @@ make_timestep_multi_plot = function(data, fitness_data, trial_list, n_col = 2, n
     plot_list[[i]] = make_timestep_plot(
       data = data, 
       fitness_data = fitness_data, 
+      time_series_data = time_series_data,
       runs = trial[1], agents = trial[2], trials = trial[3]
     )
     
@@ -724,11 +731,11 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   task_data = rbind(task1_data, task4_data, task4_data_perfect)
   
   plot = ggpubr::ggarrange(
+    average_trial_plot(task_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials"),
     average_trial_plot(task_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event"),
     average_trial_plot(task_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event"),
-    average_trial_plot(task_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials"),
     average_trial_plot(profile_data, "Phi", event=T, profile = T, title = "Phi", subtitle = "Relative to first sight event \nTask 4 split into correlation profiles"),
-    ncol = 2, nrow = 2
+    ncol = 2, nrow = 2, labels = "auto"
   )
   
   return(plot)
@@ -772,5 +779,4 @@ average_trial_all_runs_plot = function(data, time_series_data){
 }
 
 
-profile_data[profile_data$profile=="positive",]$run[subset(fitness_task4, run %in% profile_data[profile_data$profile=="positive",]$run & agent == 120)$fitness==1]
-table(trial_profile_data$group)
+

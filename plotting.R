@@ -36,21 +36,12 @@ pos_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1
 neu_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1<0.1 & V1>(-.1), run]
 
 averaged_data2 = timestep_data_task4[,.(Phi_mean = mean(Phi), surprisal_mean = mean(surprisal)), by = .(run,agent)][,lapply(.SD, smooth), by = run]
-averaged_data2$profil = NA
-averaged_data2$profil[averaged_data2$run %in% neg_runs] = "Negative"
-averaged_data2$profil[averaged_data2$run %in% pos_runs] = "Positive"
-averaged_data2$profil[averaged_data2$run %in% neu_runs] = "Neutral"
+averaged_data2$profile = NA
+averaged_data2$profile[averaged_data2$run %in% neg_runs] = "Negative"
+averaged_data2$profile[averaged_data2$run %in% pos_runs] = "Positive"
+averaged_data2$profile[averaged_data2$run %in% neu_runs] = "Neutral"
 
 averaged_data2 = averaged_data2[complete.cases(averaged_data2)]
-
-averaged_data3 = merge(averaged_data2[agent==120], time_series_data[task=="Task 4" & lag == 0, .(cor = mean(cor)), by = run], by = "run")
-
-ggplot(averaged_data3, aes(x = Phi_mean, y = cor)) +
-  geom_point() +
-  geom_smooth(method="lm")
-
-summary(lm(cor ~ Phi_mean, averaged_data3))
-
 
 averaged_data2 = merge(averaged_data2, fitness_task4, by = c("run", "agent"))[
   ,.(Phi = mean(Phi_mean), 
@@ -59,19 +50,30 @@ averaged_data2 = merge(averaged_data2, fitness_task4, by = c("run", "agent"))[
      fitness_se = sd(fitness)/sqrt(.N),
      surprisal = mean(surprisal_mean), 
      surprisal_se = sd(surprisal_mean)/sqrt(.N)
-  ), by = .(agent, profil)
+  ), by = .(agent, profile)
 ]
 
 
+task_plot = ggpubr::ggarrange(
+  make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
+  make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
+  make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
+  labels = "auto",
+  ncol = 3, common.legend = T
+)
+
+profile_plot = ggpubr::ggarrange(
+  make_LOD_plot(averaged_data2, "fitness", y_label = "Average fitness", seperator = "profile"),
+  make_LOD_plot(averaged_data2, "Phi", y_label = "Average Phi", seperator = "profile"),
+  make_LOD_plot(averaged_data2, "surprisal", y_label = "Average surprisal", seperator = "profile"),
+  labels = c("d", "e", "f"),
+  ncol = 3, common.legend = T
+)
+
 ggsave(
-  "plots/average_LOD_plot_profile_split.jpg",
-  ggpubr::ggarrange(
-    make_LOD_plot(averaged_data2, "Phi", y_label = "Average Phi", seperator = "profil"),
-    make_LOD_plot(averaged_data2, "surprisal", y_label = "Average surprisal", seperator = "profil"),
-    make_LOD_plot(averaged_data2, "fitness", y_label = "Average fitness", seperator = "profil"),
-    labels = "auto",
-    ncol = 3, common.legend = T
-  ), width = 7.5, height = 3
+  "plots/average_LOD_plot_w_profile.jpg",
+  ggpubr::ggarrange(task_plot,profile_plot, nrow = 2), 
+  width = 7.5, height = 6
 )
 
 #### TIMESTEP PLOTS ####
@@ -111,6 +113,7 @@ ggsave("plots/timestep_worst_perfect.jpg",
 ggsave("plots/timestep_selection.jpg",
        make_timestep_multi_plot(data = timestep_data_task4, 
                                 fitness_data = fitness_task4,
+                                time_series_data = time_series_data,
                                 trial_list = list(
                                   c(run = 26, agent = 120, trial = 55),
                                   c(run = 6, agent = 120, trial = 55),
