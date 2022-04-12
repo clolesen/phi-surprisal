@@ -17,20 +17,26 @@ fitness_task1 = fread("processed_data/fitness_task1.csv")
 fitness_task4 = fread("processed_data/fitness_task4.csv")
 
 
-#### AVERAGE PLOTS ####
+#### AVERAGE LOD PLOTS ####
+
+# convert task names
+averaged_data[.(task = c("Task 1", "Task 4", "Task 4 - Perfect"), 
+                to = c("Easy task", "Hard task", "Hard task - Perfect")), 
+              on = "task", task := i.to]
 
 # Average LOD plot
 ggsave(
   "plots/average_LOD_plot.jpg",
   ggpubr::ggarrange(
+    make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
     make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
     make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
-    make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
     labels = "auto",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3
 )
 
+#Constructing correlation profile data
 neg_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1<(-0.1), run]
 pos_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1>0.1, run]
 neu_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1<0.1 & V1>(-.1), run]
@@ -54,27 +60,18 @@ averaged_data2 = merge(averaged_data2, fitness_task4, by = c("run", "agent"))[
 ]
 
 
-task_plot = ggpubr::ggarrange(
-  make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
-  make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
-  make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
-  labels = "auto",
-  ncol = 3, common.legend = T
-)
-
-profile_plot = ggpubr::ggarrange(
-  make_LOD_plot(averaged_data2, "fitness", y_label = "Average fitness", seperator = "profile"),
-  make_LOD_plot(averaged_data2, "Phi", y_label = "Average Phi", seperator = "profile"),
-  make_LOD_plot(averaged_data2, "surprisal", y_label = "Average surprisal", seperator = "profile"),
-  labels = c("d", "e", "f"),
-  ncol = 3, common.legend = T
-)
-
+# Average LOD plot (hard task split by correlation profiles)
 ggsave(
-  "plots/average_LOD_plot_w_profile.jpg",
-  ggpubr::ggarrange(task_plot,profile_plot, nrow = 2), 
-  width = 7.5, height = 6
+  "plots/average_LOD_plot_profile_split.jpg",
+  ggpubr::ggarrange(
+    make_LOD_plot(averaged_data2, "fitness", y_label = "Average fitness", seperator = "profile"),
+    make_LOD_plot(averaged_data2, "Phi", y_label = "Average Phi", seperator = "profile"),
+    make_LOD_plot(averaged_data2, "surprisal", y_label = "Average surprisal", seperator = "profile"),
+    labels = "auto",
+    ncol = 3, common.legend = T
+  ), width = 7.5, height = 3
 )
+
 
 #### TIMESTEP PLOTS ####
 
@@ -199,6 +196,11 @@ for (r in 0:49){
 
 #### TIME SERIES PLOTS ####
 
+# Convert task names
+time_series_data[.(task = c("Task 1", "Task 4", "Task 4 - Perfect"), 
+                to = c("Easy task", "Hard task", "Hard task - Perfect")), 
+              on = "task", task := i.to]
+
 ggsave(
   "plots/time_series_density_-16_16.jpg",
   make_time_series_plot(time_series_data, range = -16:16, seperator = "task"),
@@ -213,14 +215,14 @@ ggsave(
 
 
 perfects = fitness_task4[agent==120 & fitness==1, run]
-time_series_data_perfect_task4 = time_series_data[run %in% perfects & task == "Task 4"]
-time_series_data_perfect_task4$task = "Task 4 - Perfect"
+time_series_data_perfect_task4 = time_series_data[run %in% perfects & task == "Hard task"]
+time_series_data_perfect_task4$task = "Hard task - Perfect"
 time_series_data_perfect_task4 = rbind(time_series_data, time_series_data_perfect_task4)
 
 ggsave(
   "plots/time_series_density_-6_5_perfect_task4.jpg",
   make_time_series_plot(time_series_data_perfect_task4, range = -6:5, seperator = "task"),
-  width = 7.5, height = 6
+  width = 8, height = 6
 )
 
 
@@ -236,10 +238,18 @@ ggsave(
 
 #### AVERAGE TRIAL PLOTS ####
 
+average_trial_plot_list = make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data)
+
 ggsave(
   "plots/average_trial_plot.jpg",
-  make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data),
-  width = 15, height = 6
+  average_trial_plot_list[[1]],
+  width = 10, height = 5
+)
+
+ggsave(
+  "plots/average_trial_plot_profile_split.jpg",
+  average_trial_plot_list[[2]],
+  width = 10, height = 5
 )
 
 ggsave(

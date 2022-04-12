@@ -336,7 +336,7 @@ make_timestep_multi_plot = function(data, fitness_data, time_series_data, trial_
   
   plot = ggpubr::ggarrange(
     plotlist = plot_list,
-    ncol = n_col, nrow = n_row,common.legend = T 
+    ncol = n_col, nrow = n_row,common.legend = T, labels = "auto" 
   )
   
   return(plot)
@@ -388,7 +388,7 @@ time_series_plot = function(data, seperator){
   }
   
   plot = ggplot(data, aes(x = cor)) +
-    facet_wrap(~lag) +
+    facet_wrap(~lag, labeller = label_both) +
     theme_minimal() +
     #theme(legend.position = "none") +
     geom_vline(xintercept=0) + 
@@ -724,21 +724,35 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   task4_data_perfect = subset(task4_data, group == "perfect" )
   task4_data= subset(task4_data, group == "all" )
   
-  task1_data$seperator = "Task 1"
-  task4_data$seperator = "Task 4"
-  task4_data_perfect$seperator = "Task 4 - Perfect"
+  task1_data$seperator = "Easy task"
+  task4_data$seperator = "Hard task"
+  task4_data_perfect$seperator = "Hard task - Perfect"
   
   task_data = rbind(task1_data, task4_data, task4_data_perfect)
   
-  plot = ggpubr::ggarrange(
+  task_split_plot = ggpubr::ggarrange(
     average_trial_plot(task_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials"),
     average_trial_plot(task_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event"),
+    average_trial_plot(task_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials"),
     average_trial_plot(task_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event"),
-    average_trial_plot(profile_data, "Phi", event=T, profile = T, title = "Phi", subtitle = "Relative to first sight event \nTask 4 split into correlation profiles"),
-    ncol = 2, nrow = 2, labels = "auto"
+    ncol = 2, nrow = 2, labels = "auto", common.legend = T
   )
   
-  return(plot)
+  profile_split_plot = ggpubr::ggarrange(
+    average_trial_plot(profile_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials", profile = T),
+    average_trial_plot(profile_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T),
+    average_trial_plot(profile_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials", profile = T),
+    average_trial_plot(profile_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T),
+    ncol = 2, nrow = 2, labels = "auto", common.legend = T
+  )
+  
+  
+  return(
+    list(
+      task_split_plot,
+      profile_split_plot
+    )
+  )
 }
 
 average_trial_all_runs_plot = function(data, time_series_data){
