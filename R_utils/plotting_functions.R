@@ -603,11 +603,11 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   
   data = do.call(rbind, split_data)
   
-  data = merge(data, time_series_data, by = c("run", "trial"))
-  data$trial_profile = NA
-  data$trial_profile[data$cor<(-0.1)] = "trial_Negative"
-  data$trial_profile[data$cor>(-0.1)&data$cor<0.1] = "trial_Neutral"
-  data$trial_profile[data$cor>0.1] = "trial_Positive"
+  data_merge = merge(data, time_series_data, by = c("run", "trial"))
+  data_merge$trial_profile = NA
+  data_merge$trial_profile[data_merge$cor<(-0.1)] = "trial_Negative"
+  data_merge$trial_profile[data_merge$cor>(-0.1)&data_merge$cor<0.1] = "trial_Neutral"
+  data_merge$trial_profile[data_merge$cor>0.1] = "trial_Positive"
   
   profile_data = time_series_data[,.(cor=mean(cor, na.rm=T)), by = run]
   profile_data$profile = NA
@@ -621,7 +621,11 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   
   for(group in c("all", "perfect", "Negative", "Neutral", "Positive", "trial_Negative", "trial_Neutral", "trial_Positive")){
     
-    use_data = data
+    if(group %in% c("all","perfect")){
+      use_data = data
+    } else {
+      use_data = data_merge
+    }
     
     if(group == "perfect"){
       runs = fitness_data[fitness_data$agent == 120 & fitness_data$fitness == 1,]$run
