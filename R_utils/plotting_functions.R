@@ -759,7 +759,6 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
     ncol = 2, nrow = 2, labels = "auto", common.legend = T
   )
   
-  
   return(
     list(
       task_split_plot,
