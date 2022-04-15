@@ -240,6 +240,8 @@ ggsave(
 
 average_trial_plot_list = make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data)
 
+average_trial_plot_list[[2]]
+
 ggsave(
   "plots/average_trial_plot.jpg",
   average_trial_plot_list[[1]],

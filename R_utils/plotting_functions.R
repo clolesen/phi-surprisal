@@ -604,6 +604,7 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   data = do.call(rbind, split_data)
   
   data_merge = merge(data, time_series_data, by = c("run", "trial"))
+  
   data_merge$trial_profile = NA
   data_merge$trial_profile[data_merge$cor<(-0.1)] = "trial_Negative"
   data_merge$trial_profile[data_merge$cor>(-0.1)&data_merge$cor<0.1] = "trial_Neutral"
@@ -724,6 +725,14 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   trial_profile_data = subset(task4_data, group %in% c("trial_Negative", "trial_Neutral", "trial_Positive"))
   trial_profile_data$seperator = trial_profile_data$group
   
+  trial_profile_data = as.data.table(trial_profile_data)
+  
+  #renaming seperator values
+  trial_profile_data[.(seperator = c("trial_Negative", "trial_Neutral", "trial_Positive"), 
+                       to = c("Negative", "Neutral", "Positive")), 
+                     on = "seperator", seperator := i.to]
+  
+  
   task1_data= subset(task1_data, group == "all" )
   task4_data_perfect = subset(task4_data, group == "perfect" )
   task4_data= subset(task4_data, group == "all" )
@@ -743,10 +752,10 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   )
   
   profile_split_plot = ggpubr::ggarrange(
-    average_trial_plot(profile_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials", profile = T),
-    average_trial_plot(profile_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T),
-    average_trial_plot(profile_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials", profile = T),
-    average_trial_plot(profile_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T),
+    average_trial_plot(trial_profile_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials", profile = T),
+    average_trial_plot(trial_profile_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T),
+    average_trial_plot(trial_profile_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials", profile = T),
+    average_trial_plot(trial_profile_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T),
     ncol = 2, nrow = 2, labels = "auto", common.legend = T
   )
   
