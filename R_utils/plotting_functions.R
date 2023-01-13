@@ -5,6 +5,7 @@ library(tidyverse)
 library(egg)
 library(plyr)
 library(scales)
+library(gghalves)
 
 # colors used in plots
 # 1: Black
@@ -66,61 +67,6 @@ make_LOD_plot = function(data, variable, y_label = " ", x_label = "Generation", 
   return(plot)
 }
 
-make_surprisal_matrix_plot = function(data, cond, seperator = "task"){
-  
-  plot = ggarrange(
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_all"), y_label = "Surprisal - All runs", x_label = " ", title = "Full system states",  seperator),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_all"), x_label = " ", title = "Blanket states",  seperator = seperator),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_all"), x_label = " ", title = "Internal states",  seperator = seperator),
-    
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_LOD"), y_label = "Surprisal - LOD", x_label = " ",  seperator = seperator),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_LOD"), x_label = " ", seperator = seperator),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_LOD"), x_label = " ",  seperator = seperator),
-    
-    make_LOD_plot(data, paste0("surprisal_system_",cond,"_animat"), y_label = "Surprisal - Animat",  seperator = seperator),
-    make_LOD_plot(data, paste0("surprisal_blanket_",cond,"_animat"),  seperator = seperator),
-    make_LOD_plot(data, paste0("surprisal_internal_",cond,"_animat"), seperator =  seperator),
-    
-    labels = "auto",
-    common.legend = T, align = "v"
-  )
-  
-  return(plot)
-}
-
-make_all_LOD_phi_plot = function(data, task){
-  
-  plot_data = subset(data, task == task) 
-  
-  if (task == "task1") title = "Task 1" else title = "Task 4"
-  
-  plot = ggplot(plot_data, aes(x = agent, y = Phi_mean))+
-    geom_line() +
-    theme_minimal() +
-    facet_wrap(~run, ncol = 5) +
-    labs(y = "Average Phi", x = "Generation", title = paste0(title,": Average Phi over time for all agents seperatly")) 
-  
-  return(plot)
-}
-
-make_generation_path_plot = function(data,x_variable,y_variable,x_label = " ",y_label = " ", title = " ", color_by = "generation", color_by_label = "Generation" ,facet = F){
-  
-  
-  
-  plot = ggplot(data, aes_string(x = x_variable, y = y_variable, color = color_by))+
-    #geom_smooth() +
-    geom_point(size = 0.5) +
-    theme_classic() +
-    labs(y = y_label, x = x_label, title = title, color = color_by_label) +
-    scale_color_gradient(low = "#555555", high = color_palette[2]) +
-    geom_path(size = 0.4)
-  
-  if (!(isFALSE(facet))){
-    plot = plot + facet_wrap(as.formula(facet))
-  }
-  
-  return(plot)
-}
 
 #### TIMESTEP PLOTS ####
 
@@ -131,10 +77,6 @@ make_timestep_plot_data = function(data, variables, runs, agents, trials){
   columns = c("run", "agent", "trial", "timestep", "block_movement", "task_type", "block_size", variables)
   
   plot_data = sub_data[,..columns]
-  
-  #plot_data$run = paste("LOD", plot_data$run)
-  #plot_data$agent = paste("Animat", plot_data$agent)
-  #plot_data$trial = paste("Trial", plot_data$trial)
   
   plot_data$block_movement[plot_data$block_movement == -1] = "Left"
   plot_data$block_movement[plot_data$block_movement == 1] = "Right"
@@ -201,6 +143,8 @@ add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
     plot = plot + geom_segment(y = value, yend = value, x = 0, xend = 34, colour = "gray")
   }
   
+  x_labels = c(rbind(as.character(seq(1,33,2)), rep("",17)))[1:33]
+  
   plot = plot + 
     annotate("rect", xmin=0, xmax=34, ymin=min(y_values)-.15, ymax=-0.12, alpha=0.3, fill= color_palette[2]) +
     geom_vline(xintercept=c(0,34), linetype="solid", color = "black") +
@@ -209,19 +153,18 @@ add_tile_to_timestep_plot = function(plot, plot_data, variables, tile_names){
     geom_segment(y = min(y_values)-.15, yend = min(y_values)-.15, x = 0, xend = 34, color = "black", size = 0.5) +
     theme_void() +
     theme(
-      panel.grid.minor.x = element_line(colour = "lightgray", linetype = "dotted"),
-      #strip.background = element_rect(colour = "white", fill = "#eeeeee"),
+      panel.grid.minor.x = element_line(colour = "gray", linetype = "dotted"),
       strip.text.x = element_blank(), #element_text(margin = margin(3,0,3,0)),
       panel.spacing = unit(1, "lines"),
       plot.margin=unit(c(.5,.5,.5,.5), "cm"),
-      axis.text.x = element_text(size = 6,  margin = margin(t = -8)),
-      axis.text.y = element_text(size = 8, margin = margin(r = -20), hjust = 1)) +
+      axis.text.x = element_text(size = 7,  margin = margin(t = -4)),
+      axis.text.y = element_text(size = 8, margin = margin(r = -10), hjust = 1)) +
     scale_alpha_continuous(range = c(0,1), guide=FALSE) +
     scale_y_continuous(breaks = y_values, 
                        labels = tile_names, 
                        limits = c(min(y_values)-0.15, 3) # -0.15 to make room for the last row
                        ) +
-    scale_x_continuous(breaks = seq(1,33,1)) +
+    scale_x_continuous(breaks = seq(1,33,1), labels = x_labels) +
     geom_tile(data = tile_plot_data,
               aes(y = y, alpha = value),
               height = .1) +
@@ -234,7 +177,7 @@ make_timestep_plot = function(data, fitness_data, time_series_data,
                               line_variables = c("surprisal", "Phi"),
                               line_names = c("Surprisal", "Phi"),
                               tile_variables = c("S2", "S1", "M1", "M2"),
-                              tile_names = c("Sensory right", "Sensory left", "Motor right", "Motor left"),
+                              tile_names = c("SR", "SL", "MR", "ML"),
                               facet = "~agent", 
                               runs = 0:49, agents = 0:120, trials = 0:127){
   
@@ -270,9 +213,9 @@ make_timestep_plot = function(data, fitness_data, time_series_data,
       direction = data$block_movement[1]
       size = data$block_size[1]
       type = data$task_type[1]
-      agent = data$agent[1] #str_split(data$agent[1], " ")[[1]][2]
-      run = data$run[1] #str_split(data$run[1], " ")[[1]][2]
-      trial = data$trial[1] #str_split(data$trial[1], " ")[[1]][2]
+      agent = data$agent[1]
+      run = data$run[1] 
+      trial = data$trial[1] 
       correlation = round(time_series_data[run==data$run[1] & trial == data$trial[1] & lag==0 & task == "Task 4", cor], 2)
       animat_fitness = round(subset(fitness_data, agent==data$agent[1] & run==data$run[1])$fitness, 2)
       
@@ -298,18 +241,20 @@ make_timestep_plot = function(data, fitness_data, time_series_data,
     colnames(data_text) = c("label1", "label2", facet_variables)
     
     full_plot = full_plot + 
-      annotate("rect", xmin=0.5, xmax=21.3, ymin=1.6, ymax=3, alpha=0.4, fill= "lightgray") +
+      annotate("rect", xmin=0.5, xmax=28.5, ymin=1.5, ymax=3, alpha=0.4, fill= "lightgray") +
       geom_text(
         data    = data_text,
-        mapping = aes(x = 0.75, y = 0.6, label = label1),
+        mapping = aes(x = 0.75, y = 0.4, label = label1),
         hjust   = 0,
-        vjust   = -1
+        vjust   = -1,
+        size    = 3
       ) + 
       geom_text(
         data    = data_text,
-        mapping = aes(x = 10.75, y = 0.6, label = label2),
+        mapping = aes(x = 15.5, y = 0.4, label = label2),
         hjust   = 0,
-        vjust   = -1
+        vjust   = -1,
+        size    = 3
       )
     
   } # end if 1 facet variable
@@ -368,16 +313,6 @@ time_series_plot_data = function(data, range, runs, agents, trials, fitness_grou
   return(plot_data)
 }
 
-add_agent_groups = function(data) {
-  data$agent_groups = 0
-  intervals = seq(25,120,24)
-  for (i in 1:4){
-    group = intervals[i]:(intervals[i]+23)
-    data$agent_groups[data$agent %in% group] = i
-  }
-  return(data)
-}
-
 time_series_plot = function(data, seperator){
   
   if(isFALSE(seperator)){
@@ -390,7 +325,6 @@ time_series_plot = function(data, seperator){
   plot = ggplot(data, aes(x = cor)) +
     facet_wrap(~lag, labeller = label_both) +
     theme_minimal() +
-    #theme(legend.position = "none") +
     geom_vline(xintercept=0) + 
     labs(y = " ", x = "Correlation coeficient", color = " ", fill = " ") +
     xlim(c(-1,1)) +
@@ -403,79 +337,28 @@ make_time_series_plot = function(data, range = -6:5, seperator = F, runs = 0:49,
   
   plot_data = time_series_plot_data(data, range, runs, agents, trials, fitness_groups)
   
-  if (seperator == "agent_groups") {
-    plot_data = add_agent_groups(plot_data)
-  }
-  
   plot = time_series_plot(plot_data, seperator)
-  
-  
-  return(plot)
-}
-
-get_fitness_groups = function(data, fitness_data, group_by, group_sizes) {
-  if (group_by == "mean") {
-    mean_list = c()
-    for (r in 0:49){
-      fitness = subset(fitness_data, run == r)$fitness  
-      mean_list[r+1] = mean(fitness)
-    }
-    
-    ordered_list = cbind(mean_list, 0:49)[order(mean_list),2]
-    
-  } else if (group_by == "end") {
-    # USing end fitness values
-    end_list = c()
-    for (r in 0:49){
-      fitness = subset(fitness_data, run == r & agent == 120)$fitness
-      end_list[r+1] = fitness
-    }
-    
-    ordered_list = cbind(end_list, 0:49)[order(end_list),2]
-    
-  } else if (group_by == "random"){
-    ordered_list = sample(0:49, 50)
-  }
-  
-  # Empty list 
-  data_list = list()
-  
-  # Fill fitness group column
-  i = 1
-  for(level in 1:length(group_sizes)){
-    runs = ordered_list[i:(i-1 + group_sizes[level])]
-    data_list[[level]] = runs
-    i = i + group_sizes[level]
-  }
-  
-  return(data_list)
-}
-
-time_series_surprisal_generation_plot = function(data){
-  
-  plot = ggplot(data, aes(x = x, y = y)) +
-    geom_ribbon(aes(ymin = se_min, ymax = se_max), color = F, alpha = 0.1) +
-    geom_line(size = 1) +
-    theme_classic() +
-    facet_wrap(~run)
-    labs(y = "Mean surprisal correlations", x = "Generation", title = " ", color = " ", fill = " ") +
-    colors + fills
-  
-  return(plot)
-}
-
-time_series_surprisal_phi_plot = function(data){
-  
-  plot = ggplot(data, aes(x = surprisal_correlation, y = Phi_mean)) +
-    geom_point() +
-    theme_classic() +
-    labs(y = "Average Phi", x = "Average surprisal correlations", title = " ", color = " ", fill = " ") +
-    colors + fills
   
   return(plot)
 }
 
 #### GOAL PRIOR PLOT ####
+
+make_goal_prior_plot_data = function(data){
+  
+  data$task_type = mapvalues(data$task_type, from = c("avoid", "catch"), to = c("Avoid","Catch"))
+  data$block_movement = mapvalues(data$block_movement, from = c(-1, 1), to = c("Left", "Right"))
+  
+  data$run = paste("LOD:", data$run+1)
+  
+  data$Probability = exp(data$surprisal * -1)
+  
+  data$split_column = paste(data$task_type, "/", data$block_movement)
+  
+  split_data = split(data, data$split_column)
+  
+  return(split_data)
+}
 
 make_sub_goal_prior_plot = function(data){
   
@@ -501,22 +384,6 @@ make_sub_goal_prior_plot = function(data){
   return(plot)
 }
 
-make_goal_prior_plot_data = function(data){
-  
-  data$task_type = mapvalues(data$task_type, from = c("avoid", "catch"), to = c("Avoid","Catch"))
-  data$block_movement = mapvalues(data$block_movement, from = c(-1, 1), to = c("Left", "Right"))
-  
-  data$run = paste("LOD:", data$run+1)
-  
-  data$Probability = exp(data$surprisal * -1)
-  
-  data$split_column = paste(data$task_type, "/", data$block_movement)
-  
-  split_data = split(data, data$split_column)
-  
-  return(split_data)
-}
-
 make_goal_prior_plot = function(data){
   
   plot_data = make_goal_prior_plot_data(data)
@@ -535,9 +402,9 @@ make_goal_prior_plot = function(data){
 #### AVERAGE TRIAL PLOT ####
 
 average_across_trials = function(data){
-  
+
   timestep_min = min(data$event_timestep)
-  
+
   i = 1
   data_list = list()
   for (timestep in timestep_min:33){
@@ -565,6 +432,11 @@ average_across_trials = function(data){
       surprisal_75percentile = quantile(sub_data_timestep$surprisal, .75),
       surprisal_25percentile = quantile(sub_data_timestep$surprisal, .25),
       
+      Phi_median_mean = median(sub_data_timestep$Phi),
+      Phi_median_se = 0,
+      surprisal_median_mean = median(sub_data_timestep$surprisal),
+      surprisal_median_se = 0,
+      
       # Event measures
       Phi_mean_event = mean(sub_data_event$Phi),
       Phi_se_event = sd(sub_data_event$Phi)/sqrt_n_event,
@@ -577,6 +449,11 @@ average_across_trials = function(data){
       surprisal_75percentile_event = quantile(sub_data_event$surprisal, .75),
       surprisal_25percentile_event = quantile(sub_data_event$surprisal, .25),
       
+      Phi_median_mean_event = median(sub_data_event$Phi),
+      Phi_median_se_event = 0,
+      surprisal_median_mean_event = median(sub_data_event$surprisal),
+      surprisal_median_se_event = 0,
+      
       timestep = timestep
     )
     
@@ -588,7 +465,8 @@ average_across_trials = function(data){
   return(averaged_data)
 }
 
-make_average_trial_data = function(data, fitness_data, time_series_data, task_number){
+make_average_trial_data = function(data, fitness_data, time_series_data, task_number, 
+                                   group_list = c("all", "perfect", "Negative", "Neutral", "Positive", "trial_Negative", "trial_Neutral", "trial_Positive")){
   
   data = data[agent==120]
   time_series_data = time_series_data[agent == 120 & task == paste("Task",task_number) & lag == 0]
@@ -604,7 +482,7 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   data = do.call(rbind, split_data)
   
   data_merge = merge(data, time_series_data, by = c("run", "trial"))
-  
+
   data_merge$trial_profile = NA
   data_merge$trial_profile[data_merge$cor<(-0.1)] = "trial_Negative"
   data_merge$trial_profile[data_merge$cor>(-0.1)&data_merge$cor<0.1] = "trial_Neutral"
@@ -620,7 +498,7 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   data_list = list()
   i = 1
   
-  for(group in c("all", "perfect", "Negative", "Neutral", "Positive", "trial_Negative", "trial_Neutral", "trial_Positive")){
+  for(group in group_list){
     
     if(group %in% c("all","perfect")){
       use_data = data
@@ -652,13 +530,16 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
       use_data = subset(use_data, trial_profile == group)
     }
     
-    average_data = average_across_trials(use_data)
+    if(nrow(use_data)>0){
+      average_data = average_across_trials(use_data)
+      
+      average_data$group = group
+      
+      data_list[[i]] = average_data
+      
+      i = i + 1
+    }
     
-    average_data$group = group
-    
-    data_list[[i]] = average_data
-    
-    i = i + 1
     
     
   }
@@ -668,15 +549,27 @@ make_average_trial_data = function(data, fitness_data, time_series_data, task_nu
   return(data)
 }
 
-average_trial_plot = function(data, variable, event, title, subtitle, profile = F){
+average_trial_plot = function(data, variable, event, title, subtitle, profile = F, median){
   
-  if (variable == "surprisal"){
+  if (variable == "surprisal_median"){
+    y_limit = c(0,2.6)
+    y_label = "Median surprisal"
+  } 
+  if (variable == "surprisal") {
     y_limit = c(0.15,2.4)
     y_label = "Average surprisal"
-  } else {
+  }
+  
+  if (variable == "Phi_median"){
+    y_limit = c(0,0.6)
+    y_label = "Median Phi"
+  } 
+  if (variable == "Phi"){
     y_limit = c(0.1,0.8)
     y_label = "Average Phi"
-  } 
+  }
+  
+
   if (event == T){
     x_limit = c(-7,30)
     x_label = "Relative timestep"
@@ -714,28 +607,27 @@ average_trial_plot = function(data, variable, event, title, subtitle, profile = 
   return(plot)
 }
 
-make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data){
+make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data, median = F){
   
-  task1_data = make_average_trial_data(timestep_data_task1, fitness_task1, time_series_data, 1)
-  task4_data = make_average_trial_data(timestep_data_task4, fitness_task4, time_series_data, 4)
+  group_list = c("all", "perfect", "trial_Negative", "trial_Neutral", "trial_Positive")
   
-  profile_data = subset(task4_data, group %in% c("Negative", "Neutral", "Positive"))
-  profile_data$seperator = profile_data$group
+  task1_data = make_average_trial_data(timestep_data_task1, fitness_task1, time_series_data, 1, group_list)
+  task4_data = make_average_trial_data(timestep_data_task4, fitness_task4, time_series_data, 4, group_list)
   
   trial_profile_data = subset(task4_data, group %in% c("trial_Negative", "trial_Neutral", "trial_Positive"))
   trial_profile_data$seperator = trial_profile_data$group
   
   trial_profile_data = as.data.table(trial_profile_data)
   
-  #renaming seperator values
+  # renaming seperator values
   trial_profile_data[.(seperator = c("trial_Negative", "trial_Neutral", "trial_Positive"), 
                        to = c("Negative", "Neutral", "Positive")), 
                      on = "seperator", seperator := i.to]
   
   
-  task1_data= subset(task1_data, group == "all" )
+  task1_data = subset(task1_data, group == "all" )
   task4_data_perfect = subset(task4_data, group == "perfect" )
-  task4_data= subset(task4_data, group == "all" )
+  task4_data = subset(task4_data, group == "all" )
   
   task1_data$seperator = "Easy task"
   task4_data$seperator = "Hard task"
@@ -743,19 +635,27 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   
   task_data = rbind(task1_data, task4_data, task4_data_perfect)
   
+  if (median){
+    Phi = "Phi_median"
+    surprisal = "surprisal_median"
+  } else {
+    Phi = "Phi"
+    surprisal = "surprisal"
+  }
+  
   task_split_plot = ggpubr::ggarrange(
-    average_trial_plot(task_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials"),
-    average_trial_plot(task_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event"),
-    average_trial_plot(task_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials"),
-    average_trial_plot(task_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event"),
+    average_trial_plot(task_data, surprisal, event=F, title = "Surprisal", subtitle = "Averaged over trials", median=median),
+    average_trial_plot(task_data, surprisal, event=T, title = "Surprisal", subtitle = "Relative to first sight event", median=median),
+    average_trial_plot(task_data, Phi, event=F, title = "Phi", subtitle = "Averaged over trials", median=median),
+    average_trial_plot(task_data, Phi, event=T, title = "Phi", subtitle = "Relative to first sight event", median=median),
     ncol = 2, nrow = 2, labels = "auto", common.legend = T
   )
   
   profile_split_plot = ggpubr::ggarrange(
-    average_trial_plot(trial_profile_data, "surprisal", event=F, title = "Surprisal", subtitle = "Averaged over trials", profile = T),
-    average_trial_plot(trial_profile_data, "surprisal", event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T),
-    average_trial_plot(trial_profile_data, "Phi", event=F, title = "Phi", subtitle = "Averaged over trials", profile = T),
-    average_trial_plot(trial_profile_data, "Phi", event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T),
+    average_trial_plot(trial_profile_data, surprisal, event=F, title = "Surprisal", subtitle = "Averaged over trials", profile = T, median=median),
+    average_trial_plot(trial_profile_data, surprisal, event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T, median=median),
+    average_trial_plot(trial_profile_data, Phi, event=F, title = "Phi", subtitle = "Averaged over trials", profile = T, median=median),
+    average_trial_plot(trial_profile_data, Phi, event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T, median=median),
     ncol = 2, nrow = 2, labels = "auto", common.legend = T
   )
   
@@ -767,10 +667,10 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
   )
 }
 
-average_trial_all_runs_plot = function(data, time_series_data){
+average_trial_all_runs_plot = function(timestep_data_task1, timestep_data_task4, time_series_data, fitness_data){
   
   
-  data = subset(data, agent == 120)
+  data = subset(timestep_data_task4, agent == 120)
   
   
   data$trial_id = paste0("r", data$run, "a", data$agent, "t", data$trial)
@@ -781,6 +681,7 @@ average_trial_all_runs_plot = function(data, time_series_data){
   }
   
   data = do.call(rbind, split_data)
+  
   
   time_series_data = subset(time_series_data, task == "Task 4" & lag == 0)
   
@@ -794,15 +695,177 @@ average_trial_all_runs_plot = function(data, time_series_data){
   
   plot_data = merge(data, profile_data, by = "run")
   
-  plot = ggplot(plot_data, aes(x = event_timestep, y = Phi, color = profile)) +
+  plot1 = ggplot(plot_data, aes(x = event_timestep, y = Phi, color = as.character(run))) +
     geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
     lims(x = c(-7,30)) +
     theme_classic() +
-    geom_line(size = 1.5) +
-    facet_wrap(~run) +
-    scale_color_manual(values = c("#6B00B9","#989898","#8D391E"))
-  return(plot)
+    geom_line(size = 0.3, alpha=0.3) +
+    facet_wrap(~profile) +
+    theme(legend.position='none') +
+    labs(x = "Relative timestep") 
+  
+  plot2 = ggplot(plot_data, aes(x = event_timestep, y = surprisal, color = as.character(run))) +
+    geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
+    lims(x = c(-7,30)) +
+    theme_classic() +
+    geom_line(size = 0.3, alpha=0.3) +
+    facet_wrap(~profile) +
+    theme(legend.position='none') +
+    labs(x = "Relative timestep") 
+  
+  
+  data1 = subset(timestep_data_task1, agent == 120)
+  data1$trial_id = paste0("r", data1$run, "a", data1$agent, "t", data1$trial)
+  split_data1 = split(data1, data1$trial_id)
+  for (i in 1:length(split_data1)){
+    split_data1[[i]]$event_timestep = split_data1[[i]]$timestep - which(split_data1[[i]]$first_sight==1)
+  }
+  data1 = do.call(rbind, split_data1)
+  data1 = dplyr::summarise(group_by(data1, run, event_timestep), Phi = mean(Phi), surprisal = mean(surprisal))
+
+  
+  data$task = "Hard task"
+  data1$task = "Easy task"
+  
+  perfect_runs = fitness_data[fitness_data$agent == 120 & fitness_data$fitness == 1,]$run
+  data_perfect = subset(data, run %in% perfect_runs)
+  data_perfect$task = "Hard task - Perfect"
+  
+  plot_data = rbind(data, data1, data_perfect)
+  
+  plot3 = ggplot(plot_data, aes(x = event_timestep, y = Phi, color = as.character(run))) +
+    geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
+    lims(x = c(-7,30)) +
+    theme_classic() +
+    geom_line(size = 0.3, alpha=0.3) +
+    facet_wrap(~task) +
+    theme(legend.position='none') +
+    labs(x = "Relative timestep") 
+  
+  plot4 = ggplot(plot_data, aes(x = event_timestep, y = surprisal, color = as.character(run))) +
+    geom_vline(xintercept=0, linetype = "dashed", color = "darkgray") +
+    lims(x = c(-7,30)) +
+    theme_classic() +
+    geom_line(size = 0.3, alpha=0.3) +
+    facet_wrap(~task) +
+    theme(legend.position='none') +
+    labs(x = "Relative timestep") 
+  
+  
+  final_plot = ggpubr::ggarrange(
+    plot1, plot2, plot3, plot4,
+    ncol = 1, nrow = 4, labels = "auto"
+  )
+  
+    
+  return(final_plot)
+}
+
+make_average_trial_plot_LOD = function(timestep_data_task4, fitness_task4, time_series_data){
+  
+  data_list= list()
+  i = 1
+  for (r in unique(timestep_data_task4$run)){
+    temp_fitness = fitness_task4[run==r]
+    temp_data = timestep_data_task4[run==r]
+    temp_time_series = time_series_data[run==r & task == "Task 4"]
+    if (nrow(temp_time_series) > 0){
+      task4_data = make_average_trial_data(temp_data, temp_fitness, temp_time_series, 4, c("trial_Negative", "trial_Neutral", "trial_Positive"))
+      task4_data$run = r
+      data_list[[i]] = task4_data
+      i = 1 + i
+    }
+  }
+  
+  plot_data = do.call(rbind, data_list)
+  
+  trial_profile_data = subset(plot_data, group %in% c("trial_Negative", "trial_Neutral", "trial_Positive"))
+  trial_profile_data$seperator = trial_profile_data$group
+  
+  trial_profile_data = as.data.table(trial_profile_data)
+  
+  #renaming seperator values
+  trial_profile_data[.(seperator = c("trial_Negative", "trial_Neutral", "trial_Positive"), 
+                       to = c("Negative", "Neutral", "Positive")), 
+                     on = "seperator", seperator := i.to]
+  
+  
+  
+  plot = average_trial_plot(trial_profile_data, "Phi", event=T, title = " ", subtitle = " ", profile = T, median=F) +
+    facet_wrap(~run, ncol=6) +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank()
+    ) +
+    lims(y = c(0,3))
+  
+  plot2 = average_trial_plot(trial_profile_data, "surprisal", event=T, title = " ", subtitle = " ", profile = T, median=F) +
+    facet_wrap(~run, ncol=6) +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank()
+    ) +
+    lims(y = c(0,3.6))
+  
+  return(list(plot,plot2))
 }
 
 
+
+#### DISTRIBUTION PLOT ####
+
+distribution_plot = function(timestep_data_task1,timestep_data_task4, fitness_data){
+  
+  data1 = timestep_data_task1[agent==120, c("Phi", "surprisal")]
+  data1$Task = "Easy task"
+  data4 = timestep_data_task4[agent==120, c("Phi", "surprisal")]
+  data4$Task = "Hard task"
+  
+  perfect_runs = fitness_data[agent == 120 & fitness == 1, run]
+  data4_perfect = timestep_data_task4[agent==120 & run %in% perfect_runs, c("Phi", "surprisal")]
+  data4_perfect$Task = "Hard task\nperfect"
+  
+  data = rbind(data1,data4,data4_perfect)
+  
+  boxplot = geom_half_boxplot(aes(fill = Task), alpha = 0.3, side = "r", outlier.size = 0.1, width = .3)
+  
+  plot1 = ggplot(data, aes(y = Phi, x = Task)) +
+    
+    stat_summary(fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                 width = 1, linetype = "solid", color = "#333333", size = .3) +
+    
+    geom_half_violin(aes(fill = Task), color = "white", width = 2) +
+    
+    boxplot +
+    
+    stat_summary(fun="mean",color="darkgray", size = .2) +
+    
+    theme_classic() +
+    theme(legend.position="none") +
+    labs(x = " ", color = " ", fill = " ") +
+    fills
+  
+  plot2 = ggplot(data, aes(y = surprisal, x = Task)) +
+    
+    stat_summary(fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                 width = 1, linetype = "solid", color = "#333333", size = .3) +
+    
+    geom_half_violin(aes(fill = Task), color = "white", width = 2) +
+    
+    boxplot + 
+    
+    stat_summary(fun="mean",color="darkgray", size = .2) +
+    
+    theme_classic() + 
+    theme(legend.position="none") +
+    labs(x = " ", y = "Surprisal", color = " ", fill = " ") +
+    fills
+    
+  plot = ggpubr::ggarrange(
+    plot1,plot2,
+    ncol = 2, nrow = 1, labels = "auto"
+  )
+
+  return(plot)
+}
 

@@ -14,8 +14,15 @@ generate_task_files = function(task){
   
   # PROCESS DATA
   
+  # Phi binary variable
+  timestep_data$Phi_binary = ifelse(timestep_data$Phi > 0, 1, 0)
+  
   # Averaging
-  average_data = timestep_data[,.(Phi_mean = mean(Phi), surprisal_mean = mean(surprisal)), by = .(run,agent)]
+  average_data = timestep_data[,.(Phi_mean = mean(Phi), 
+                                  surprisal_mean = mean(surprisal),
+                                  Phi_median = median(Phi),
+                                  Phi_binary_mean = mean(Phi_binary)
+                                  ), by = .(run,agent)]
   average_data_path = paste0(base_path, "averaged_across_timestep_data_task", task, ".csv")
   fwrite(average_data, average_data_path)
   
@@ -29,7 +36,11 @@ generate_task_files = function(task){
        fitness = mean(fitness), 
        fitness_se = sd(fitness)/sqrt(.N),
        surprisal = mean(surprisal_mean), 
-       surprisal_se = sd(surprisal_mean)/sqrt(.N)
+       surprisal_se = sd(surprisal_mean)/sqrt(.N),
+       Phi_median = mean(Phi_median),
+       Phi_median_se = sd(Phi_median)/sqrt(.N),
+       Phi_binary = mean(Phi_binary_mean),
+       Phi_binary_se = sd(Phi_binary_mean)/sqrt(.N)
         ), by = agent
     ]
   
@@ -57,7 +68,11 @@ generate_full_average_file = function(){
                                          fitness = mean(fitness), 
                                          fitness_se = sd(fitness)/sqrt(.N),
                                          surprisal = mean(surprisal_mean), 
-                                         surprisal_se = sd(surprisal_mean)/sqrt(.N)
+                                         surprisal_se = sd(surprisal_mean)/sqrt(.N),
+                                         Phi_median = mean(Phi_median),
+                                         Phi_median_se = sd(Phi_median)/sqrt(.N),
+                                         Phi_binary = mean(Phi_binary_mean),
+                                         Phi_binary_se = sd(Phi_binary_mean)/sqrt(.N)
   ), by = agent
   ]
   perfect_LOD$task = "Task 4 - Perfect"

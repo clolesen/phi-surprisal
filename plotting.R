@@ -41,15 +41,15 @@ neg_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1
 pos_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1>0.1, run]
 neu_runs = time_series_data[task == "Task 4" & lag == 0, mean(cor), by = run][V1<0.1 & V1>(-.1), run]
 
-averaged_data2 = timestep_data_task4[,.(Phi_mean = mean(Phi), surprisal_mean = mean(surprisal)), by = .(run,agent)][,lapply(.SD, smooth), by = run]
-averaged_data2$profile = NA
-averaged_data2$profile[averaged_data2$run %in% neg_runs] = "Negative"
-averaged_data2$profile[averaged_data2$run %in% pos_runs] = "Positive"
-averaged_data2$profile[averaged_data2$run %in% neu_runs] = "Neutral"
+averaged_data_cor_profile = timestep_data_task4[,.(Phi_mean = mean(Phi), surprisal_mean = mean(surprisal)), by = .(run,agent)][,lapply(.SD, smooth), by = run]
+averaged_data_cor_profile$profile = NA
+averaged_data_cor_profile$profile[averaged_data_cor_profile$run %in% neg_runs] = "Negative"
+averaged_data_cor_profile$profile[averaged_data_cor_profile$run %in% pos_runs] = "Positive"
+averaged_data_cor_profile$profile[averaged_data_cor_profile$run %in% neu_runs] = "Neutral"
 
-averaged_data2 = averaged_data2[complete.cases(averaged_data2)]
+averaged_data_cor_profile = averaged_data_cor_profile[complete.cases(averaged_data_cor_profile)]
 
-averaged_data2 = merge(averaged_data2, fitness_task4, by = c("run", "agent"))[
+averaged_data_cor_profile = merge(averaged_data_cor_profile, fitness_task4, by = c("run", "agent"))[
   ,.(Phi = mean(Phi_mean), 
      Phi_se = sd(Phi_mean)/sqrt(.N),
      fitness = mean(fitness), 
@@ -64,47 +64,54 @@ averaged_data2 = merge(averaged_data2, fitness_task4, by = c("run", "agent"))[
 ggsave(
   "plots/average_LOD_plot_profile_split.jpg",
   ggpubr::ggarrange(
-    make_LOD_plot(averaged_data2, "fitness", y_label = "Average fitness", seperator = "profile"),
-    make_LOD_plot(averaged_data2, "Phi", y_label = "Average Phi", seperator = "profile"),
-    make_LOD_plot(averaged_data2, "surprisal", y_label = "Average surprisal", seperator = "profile"),
+    make_LOD_plot(averaged_data_cor_profile, "fitness", y_label = "Average fitness", seperator = "profile"),
+    make_LOD_plot(averaged_data_cor_profile, "Phi", y_label = "Average Phi", seperator = "profile"),
+    make_LOD_plot(averaged_data_cor_profile, "surprisal", y_label = "Average surprisal", seperator = "profile"),
     labels = "auto",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3
 )
 
 
-#### TIMESTEP PLOTS ####
+# MEDIAN
+median_data1 = timestep_data_task1[,.(Phi = median(Phi),surprisal = median(surprisal)), by = agent]
+median_data1$task = "Easy task"
+median_data4 = timestep_data_task4[,.(Phi = median(Phi),surprisal = median(surprisal)), by = agent]
+median_data4$task = "Hard task"
 
-# Finding the worst and a perfect in task 4
+perfect_runs = unique(fitness_task4[fitness == 1 & agent == 120,run])
+median_data4_perfect = timestep_data_task4[run %in% perfect_runs,.(Phi = median(Phi),surprisal = median(surprisal)), by = agent]
+median_data4_perfect$task = "Hard task - Perfect"
 
-end_fitness = subset(fitness_task4, agent == 120)
+median_data = rbind(median_data1,median_data4,median_data4_perfect)
+median_data$Phi_se = 0
+median_data$surprisal_se = 0
 
-#worst
-end_fitness[end_fitness$fitness==min(end_fitness$fitness)] # RUN 99
-
-# Perfect
-end_fitness[end_fitness$fitness==1] #  RUN 14 29 33 34 49 68 89 96
-
-# Worst and best plot
-ggsave("plots/timestep_worst_perfect.jpg",
-       ggpubr::ggarrange(
-         make_timestep_plot(
-           data = timestep_data_task4, 
-           fitness_data = fitness_task4,
-           runs = 99, agents = c(10,50,90)-1, trials = 36
-         ),
-         make_timestep_plot(
-           data = timestep_data_task4,
-           fitness_data = fitness_task4,
-           runs = 49, agents =  c(10,50,90)-1, trials = 36
-         ),
-         ncol = 2, common.legend = T, 
-         labels = c("Worst animat", "Perfect animat"), 
-         font.label = list(size = 10, face = "bold"),
-         label.x = 0.08
-       ), width = 14, height = 10
+ggsave(
+  "plots/average_LOD_plot_median.jpg",
+  ggpubr::ggarrange(
+    make_LOD_plot(median_data, "Phi", y_label = "Median Phi", seperator = "task"),
+    make_LOD_plot(median_data, "surprisal", y_label = "Median surprisal", seperator = "task"),
+    labels = "auto",
+    ncol = 2, common.legend = T
+  ), width = 7.5, height = 3
 )
 
+
+# Average LOD plot different Phi aggregates
+ggsave(
+  "plots/average_LOD_plot_Phi_dif.jpg",
+  ggpubr::ggarrange(
+    make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
+    make_LOD_plot(averaged_data, "Phi_median", y_label = "Average median of Phi", seperator = "task"),
+    make_LOD_plot(averaged_data, "Phi_binary", y_label = "Average % of non-zero Phi", seperator = "task"),
+    #labels = "auto",
+    ncol = 3, common.legend = T
+  ), width = 7.5, height = 3
+)
+
+
+#### TIMESTEP PLOTS ####
 
 # Example selection plot
 ggsave("plots/timestep_selection.jpg",
@@ -119,86 +126,15 @@ ggsave("plots/timestep_selection.jpg",
                                   c(run = 36, agent = 120, trial = 87),
                                   c(run = 1, agent = 120, trial = 23)
                                 )
-       ), width = 14, height = 10.5
+       ), width = 7, height = 8
 )
-
-
-# Inspection plots for generation 120
-for (r in 0:49){
-  
-  inspection_trial_list = list()
-  i = 1
-  for(t in seq(0,127,4)){
-    inspection_trial_list[[i]] = c(run = r, agent = 120, trial = t)
-    i = i + 1
-  }
-  
-  # Task 1
-  ggsave(paste0("plots/timestep_inspection_plots/task_1/generation120/LOD_", r, ".jpg"),
-         make_timestep_multi_plot(data = timestep_data_task1, 
-                                  fitness_data = fitness_task1,
-                                  trial_list = inspection_trial_list,
-                                  n_col = 8,
-                                  n_row = 4
-         ), 
-         width = 56, height = 14, limitsize = F
-  )
-  
-  # Task 4
-  ggsave(paste0("plots/timestep_inspection_plots/task_4/generation120/LOD_", r, ".jpg"),
-         make_timestep_multi_plot(data = timestep_data_task4, 
-                                  fitness_data = fitness_task4,
-                                  trial_list = inspection_trial_list,
-                                  n_col = 8,
-                                  n_row = 4
-         ), 
-         width = 56, height = 14, limitsize = F
-  )
-  
-  
-}
-
-# Inspection plots for evolution
-for (r in 0:49){
-  
-  inspection_trial_list = list()
-  i = 1
-  for(t in c(8, 28, 40, 60, 72, 92, 104, 124)){
-    for(a in c(5,10,30,50,70,90,100,120)){
-      inspection_trial_list[[i]] = c(run = r, agent = a, trial = t)
-      i = i + 1
-    }
-  }
-  
-  # Task 1
-  ggsave(paste0("plots/timestep_inspection_plots/task_1/evolution/LOD_", r, ".jpg"),
-         make_timestep_multi_plot(data = timestep_data_task1, 
-                                  fitness_data = fitness_task1,
-                                  trial_list = inspection_trial_list,
-                                  n_col = 8,
-                                  n_row = 8
-         ), 
-         width = 56, height = 27, limitsize = F
-  )
-  
-  # Task 4
-  ggsave(paste0("plots/timestep_inspection_plots/task_4/evolution/LOD_", r, ".jpg"),
-         make_timestep_multi_plot(data = timestep_data_task4, 
-                                  fitness_data = fitness_task4,
-                                  trial_list = inspection_trial_list,
-                                  n_col = 8,
-                                  n_row = 8
-         ), 
-         width = 56, height = 27, limitsize = F
-  )
-}
 
 
 #### TIME SERIES PLOTS ####
 
 # Convert task names
-time_series_data[.(task = c("Task 1", "Task 4", "Task 4 - Perfect"), 
-                to = c("Easy task", "Hard task", "Hard task - Perfect")), 
+time_series_data[.(task = c("Task 1", "Task 4"), 
+                to = c("Easy task", "Hard task")), 
               on = "task", task := i.to]
 
 ggsave(
@@ -214,6 +150,7 @@ ggsave(
 )
 
 
+# Add "Hard task - Perfect"
 perfects = fitness_task4[agent==120 & fitness==1, run]
 time_series_data_perfect_task4 = time_series_data[run %in% perfects & task == "Hard task"]
 time_series_data_perfect_task4$task = "Hard task - Perfect"
@@ -238,8 +175,13 @@ ggsave(
 
 #### AVERAGE TRIAL PLOTS ####
 
+# Reload data to avoid code break if data have been changed.
+time_series_data = fread("processed_data/time_series_surprisal_Phi_combined.csv")
+
+# Construct plots
 average_trial_plot_list = make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data)
 
+# Save plots
 ggsave(
   "plots/average_trial_plot.jpg",
   average_trial_plot_list[[1]],
@@ -249,69 +191,55 @@ ggsave(
 ggsave(
   "plots/average_trial_plot_profile_split.jpg",
   average_trial_plot_list[[2]],
+  width = 10, height = 4
+)
+
+# Plot that shows all runs across different groupings
+ggsave(
+  "plots/average_trial_all_runs_plot.jpg",
+  average_trial_all_runs_plot(timestep_data_task1, timestep_data_task4, time_series_data, fitness_task4),
+  width = 8, height = 8
+)
+
+
+# Plots showing all LODs
+average_trial_plot_LOD = make_average_trial_plot_LOD(timestep_data_task4, fitness_task4, time_series_data)
+
+ggsave(
+  "plots/average_trial_all_runs_plot_profiles_Phi.jpg",
+  average_trial_plot_LOD[[1]],
+  width = 8, height = 12
+)
+
+ggsave(
+  "plots/average_trial_all_runs_plot_profiles_surprisal.jpg",
+  average_trial_plot_LOD[[2]],
+  width = 8, height = 12
+)
+
+
+
+# MEDIAN plots
+average_trial_plot_median_list = make_average_trial_plot(timestep_data_task1, timestep_data_task4, fitness_task1, fitness_task4, time_series_data, T)
+
+ggsave(
+  "plots/average_trial_plot_median.jpg",
+  average_trial_plot_median_list[[1]],
   width = 10, height = 5
 )
 
 ggsave(
-  "plots/average_trial_all_runs_plot.jpg",
-  average_trial_all_runs_plot(timestep_data_task4, time_series_data),
-  width = 15, height = 12
+  "plots/average_trial_plot_profile_split_median.jpg",
+  average_trial_plot_median_list[[2]],
+  width = 10, height = 5
 )
 
 
-#Stop
-##### MIXED CODE ####
+#### DISTRIBUTION PLOT ####
 
-ggarrange(
-  make_LOD_plot(as.data.table(LOD_fitness_group_end_task4), "Phi", y_label = "Average Phi", x_label = " ", title = "Grouped by end fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_mean_task4), "Phi", y_label = " ",x_label = " ", title = "Grouped by mean fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_end_task4), "fitness", y_label = "Fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_mean_task4), "fitness", y_label = " ", seperator = "fitness_group"),
-  common.legend = T
+ggsave("plots/distribution_plot.jpg",
+  distribution_plot(timestep_data_task1, timestep_data_task4, fitness_task4),
+  width = 6, height = 4
 )
-
-ggsave(
-  "plots/fitness_groups.jpg",
-  ggpubr::ggarrange(
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_2), "Phi", y_label = "Average Phi",x_label = " ", title = "2 groups",seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_3), "Phi", x_label = " ", title = "3 groups", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_4), "Phi", x_label = " ", title = "4 groups", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_5), "Phi", x_label = " ", title = "5 groups", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_2), "fitness", y_label = "Fitness", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_3), "fitness", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_4), "fitness", seperator = "fitness_group"),
-    make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_5), "fitness", x_label = " ", seperator = "fitness_group"),
-    legend.grob = get_legend(make_LOD_plot(as.data.table(LOD_fitness_group_end_task4_5), "fitness", seperator = "fitness_group")),
-    legend = "right",
-    ncol=4, nrow=2
-  ), width = 14, height = 8
-)
-
-
-
-ggarrange(
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_2), "Phi", y_label = "Average Phi",x_label = " ", title = "Random: 2 groups",seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_3), "Phi", x_label = " ", title = "3 groups", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_4), "Phi", x_label = " ", title = "4 groups", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_5), "Phi", x_label = " ", title = "5 groups", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_2), "fitness", y_label = "Fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_3), "fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_4), "fitness", seperator = "fitness_group"),
-  make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_5), "fitness", seperator = "fitness_group"),
-  legend.grob = get_legend(make_LOD_plot(as.data.table(LOD_fitness_group_ran_task4_5), "fitness", seperator = "fitness_group")),
-  legend = "right",
-  ncol=4, nrow=2
-)
-
-
-
-make_LOD_plot(LOD_data, "Phi", y_label = "Average Phi", seperator = "task")
-make_LOD_plot(LOD_data, "n_concepts", y_label = "Average number of concepts")
-make_LOD_plot(LOD_fitness_group_task1, "fitness", y_label = "Fitness", seperator = "fitness_group")
-
-
-
-make_all_LOD_phi_plot(average_data_task1, "task1")
-
 
 

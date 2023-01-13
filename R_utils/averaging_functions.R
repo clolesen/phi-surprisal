@@ -1,3 +1,4 @@
+
 smooth = function(input){
   
   window_size = 6
@@ -12,7 +13,6 @@ smooth = function(input){
   
   return(output)
 }
-
 
 average_across_LODs = function(averaged_data, fitness_data, task) {
   
@@ -68,67 +68,3 @@ average_across_LODs = function(averaged_data, fitness_data, task) {
   return(averaged_LOD_data)
   
 }
-
-add_fitness_groups = function(data, fitness_data, group_by, group_sizes){
-  
-  # Using mean fitness values
-  if (group_by == "mean") {
-    mean_list = c()
-    for (r in 0:49){
-      fitness = subset(fitness_data, run == r)$fitness  
-      mean_list[r+1] = mean(fitness)
-    }
-    
-    ordered_list = cbind(mean_list, 0:49)[order(mean_list),2]
-    
-  } else if (group_by == "end") {
-    # USing end fitness values
-    end_list = c()
-    for (r in 0:49){
-      fitness = subset(fitness_data, run == r & agent == 120)$fitness
-      end_list[r+1] = fitness
-    }
-    
-    ordered_list = cbind(end_list, 0:49)[order(end_list),2]
-    
-  } else if (group_by == "random"){
-    ordered_list = sample(0:49, 50)
-  }
- 
-  # Empty column 
-  data$fitness_group = 0
-  
-  # Fill fitness group column
-  i = 1
-  for(level in 1:length(group_sizes)){
-    runs = ordered_list[i:(i-1 + group_sizes[level])]
-    data$fitness_group[data$run %in% runs] = level
-    i = i + group_sizes[level]
-  }
-  
-  return(data)
-}
-
-average_across_LODs_by_fitness_group = function(averaged_data, fitness_data, task, group_by, group_sizes = rep(10,5)){
-  
-  averaged_data = add_fitness_groups(averaged_data, fitness_data, group_by, group_sizes)
-
-  split_data = split(averaged_data, averaged_data$fitness_group)
-
-  LOD_data_list = list()
-  i = 1
-  for(split in split_data){
-    runs = unique(split$run)
-    fitness_group = unique(split$fitness_group)
-    fitness_split = subset(fitness_data, run %in% runs)
-    LOD_data = average_across_LODs(split, fitness_split, task)
-    LOD_data$fitness_group = fitness_group
-    LOD_data_list[[i]] = LOD_data
-    i = i + 1
-  }
-  
-  output_data = do.call(rbind, LOD_data_list)
-  
-  return(output_data)
-}
-
