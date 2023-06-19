@@ -349,7 +349,7 @@ make_goal_prior_plot_data = function(data){
   data$task_type = mapvalues(data$task_type, from = c("avoid", "catch"), to = c("Avoid","Catch"))
   data$block_movement = mapvalues(data$block_movement, from = c(-1, 1), to = c("Left", "Right"))
   
-  data$run = paste("LOD:", data$run+1)
+  data$run = paste0("", data$run+1)
   
   data$Probability = exp(data$surprisal * -1)
   
@@ -364,6 +364,8 @@ make_sub_goal_prior_plot = function(data){
   
   title = data$split_column[1]
   
+  x_labels = c(rbind(as.character(seq(1,33,2)), rep("",17)))[1:33]
+  
   plot = ggplot(data, aes(x = as.factor(timestep), y = sensory_state, fill = Probability)) +
     geom_tile() +
     facet_grid(run ~ .) +
@@ -373,13 +375,14 @@ make_sub_goal_prior_plot = function(data){
                          values=rescale(c(0,0.25,0.75,1)),
                          limits=c(0,1)
                          ) + 
-    theme(axis.text.y = element_text(size = 8),
+    theme(axis.text.y = element_text(size = 7),
           axis.text.x = element_text(size = 8),
           strip.background =element_rect(fill="white"),
           strip.text = element_text(size = 10, face = "bold", color = "#333333"),
           legend.title = element_text(color = "#333333", size = 10, vjust = 0.80),
           legend.text = element_text(size = 8)
-          )
+          ) +
+    scale_x_discrete(breaks = seq(1,33,1), labels = x_labels)
   
   return(plot)
 }

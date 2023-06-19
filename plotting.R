@@ -26,14 +26,14 @@ averaged_data[.(task = c("Task 1", "Task 4", "Task 4 - Perfect"),
 
 # Average LOD plot
 ggsave(
-  "plots/average_LOD_plot.jpg",
+  "plots/plots_for_publication/fig3.tiff",
   ggpubr::ggarrange(
     make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
     make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
     make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
     labels = "auto",
     ncol = 3, common.legend = T
-  ), width = 7.5, height = 3
+  ), width = 7.5, height = 3, device='tiff', dpi=300
 )
 
 #Constructing correlation profile data
@@ -62,14 +62,14 @@ averaged_data_cor_profile = merge(averaged_data_cor_profile, fitness_task4, by =
 
 # Average LOD plot (hard task split by correlation profiles)
 ggsave(
-  "plots/average_LOD_plot_profile_split.jpg",
+  "plots/plots_for_publication/fig7.tiff",
   ggpubr::ggarrange(
     make_LOD_plot(averaged_data_cor_profile, "fitness", y_label = "Average fitness", seperator = "profile"),
     make_LOD_plot(averaged_data_cor_profile, "Phi", y_label = "Average Phi", seperator = "profile"),
     make_LOD_plot(averaged_data_cor_profile, "surprisal", y_label = "Average surprisal", seperator = "profile"),
     labels = "auto",
     ncol = 3, common.legend = T
-  ), width = 7.5, height = 3
+  ), width = 7.5, height = 3, device='tiff', dpi=300
 )
 
 
@@ -114,7 +114,7 @@ ggsave(
 #### TIMESTEP PLOTS ####
 
 # Example selection plot
-ggsave("plots/timestep_selection.jpg",
+ggsave("plots/plots_for_publication/fig5.tiff",
        make_timestep_multi_plot(data = timestep_data_task4, 
                                 fitness_data = fitness_task4,
                                 time_series_data = time_series_data,
@@ -126,7 +126,7 @@ ggsave("plots/timestep_selection.jpg",
                                   c(run = 36, agent = 120, trial = 87),
                                   c(run = 1, agent = 120, trial = 23)
                                 )
-       ), width = 7, height = 8
+       ), width = 7, height = 8, device='tiff', dpi=300, units="in"
 )
 
 
@@ -157,18 +157,18 @@ time_series_data_perfect_task4$task = "Hard task - Perfect"
 time_series_data_perfect_task4 = rbind(time_series_data, time_series_data_perfect_task4)
 
 ggsave(
-  "plots/time_series_density_-6_5_perfect_task4.jpg",
+  "plots/plots_for_publication/fig6.tiff",
   make_time_series_plot(time_series_data_perfect_task4, range = -6:5, seperator = "task"),
-  width = 8, height = 6
+  width = 7.5, height = 7, device='tiff', dpi=300, units="in"
 )
 
 
 #### GOAL PRIOR PLOTS ####
 
 ggsave(
-  "plots/goal_prior_plot.jpg",
+  "plots/plots_for_publication/fig10.tiff",
   make_goal_prior_plot(goal_prior_task4),
-  width = 13, height = 14 
+  width = 7.5, height = 8.75, device='tiff', dpi=300, units="in" 
 )
 
 
@@ -183,15 +183,15 @@ average_trial_plot_list = make_average_trial_plot(timestep_data_task1, timestep_
 
 # Save plots
 ggsave(
-  "plots/average_trial_plot.jpg",
+  "plots/plots_for_publication/fig4.tiff",
   average_trial_plot_list[[1]],
-  width = 10, height = 5
+  width = 7.5, height = 3.75, device='tiff', dpi=300, units="in" 
 )
 
 ggsave(
-  "plots/average_trial_plot_profile_split.jpg",
+  "plots/plots_for_publication/fig8.tiff",
   average_trial_plot_list[[2]],
-  width = 10, height = 4
+  width = 7.5, height = 3.75, device='tiff', dpi=300, units="in" 
 )
 
 # Plot that shows all runs across different groupings
@@ -237,9 +237,9 @@ ggsave(
 
 #### DISTRIBUTION PLOT ####
 
-ggsave("plots/distribution_plot.jpg",
+ggsave("plots/plots_for_publication/fig2.tiff",
   distribution_plot(timestep_data_task1, timestep_data_task4, fitness_task4),
-  width = 6, height = 4
+  width = 6, height = 4, device='tiff', dpi=300, units="in" 
 )
 
 
