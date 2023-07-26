@@ -31,7 +31,7 @@ ggsave(
     make_LOD_plot(averaged_data, "fitness", y_label = "Average fitness", seperator = "task"),
     make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
     make_LOD_plot(averaged_data, "surprisal", y_label = "Average surprisal", seperator = "task"),
-    labels = "auto",
+    labels = "AUTO",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3, device='tiff', dpi=300
 )
@@ -67,7 +67,7 @@ ggsave(
     make_LOD_plot(averaged_data_cor_profile, "fitness", y_label = "Average fitness", seperator = "profile"),
     make_LOD_plot(averaged_data_cor_profile, "Phi", y_label = "Average Phi", seperator = "profile"),
     make_LOD_plot(averaged_data_cor_profile, "surprisal", y_label = "Average surprisal", seperator = "profile"),
-    labels = "auto",
+    labels = "AUTO",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3, device='tiff', dpi=300
 )
@@ -92,7 +92,7 @@ ggsave(
   ggpubr::ggarrange(
     make_LOD_plot(median_data, "Phi", y_label = "Median Phi", seperator = "task"),
     make_LOD_plot(median_data, "surprisal", y_label = "Median surprisal", seperator = "task"),
-    labels = "auto",
+    labels = "AUTO",
     ncol = 2, common.legend = T
   ), width = 7.5, height = 3
 )
@@ -105,7 +105,7 @@ ggsave(
     make_LOD_plot(averaged_data, "Phi", y_label = "Average Phi", seperator = "task"),
     make_LOD_plot(averaged_data, "Phi_median", y_label = "Average median of Phi", seperator = "task"),
     make_LOD_plot(averaged_data, "Phi_binary", y_label = "Average % of non-zero Phi", seperator = "task"),
-    #labels = "auto",
+    #labels = "AUTO",
     ncol = 3, common.legend = T
   ), width = 7.5, height = 3
 )

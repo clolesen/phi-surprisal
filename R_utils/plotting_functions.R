@@ -281,7 +281,7 @@ make_timestep_multi_plot = function(data, fitness_data, time_series_data, trial_
   
   plot = ggpubr::ggarrange(
     plotlist = plot_list,
-    ncol = n_col, nrow = n_row,common.legend = T, labels = "auto" 
+    ncol = n_col, nrow = n_row,common.legend = T, labels = "AUTO" 
   )
   
   return(plot)
@@ -651,7 +651,7 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
     average_trial_plot(task_data, surprisal, event=T, title = "Surprisal", subtitle = "Relative to first sight event", median=median),
     average_trial_plot(task_data, Phi, event=F, title = "Phi", subtitle = "Averaged over trials", median=median),
     average_trial_plot(task_data, Phi, event=T, title = "Phi", subtitle = "Relative to first sight event", median=median),
-    ncol = 2, nrow = 2, labels = "auto", common.legend = T
+    ncol = 2, nrow = 2, labels = "AUTO", common.legend = T
   )
   
   profile_split_plot = ggpubr::ggarrange(
@@ -659,7 +659,7 @@ make_average_trial_plot = function(timestep_data_task1, timestep_data_task4, fit
     average_trial_plot(trial_profile_data, surprisal, event=T, title = "Surprisal", subtitle = "Relative to first sight event", profile = T, median=median),
     average_trial_plot(trial_profile_data, Phi, event=F, title = "Phi", subtitle = "Averaged over trials", profile = T, median=median),
     average_trial_plot(trial_profile_data, Phi, event=T, title = "Phi", subtitle = "Relative to first sight event", profile = T, median=median),
-    ncol = 2, nrow = 2, labels = "auto", common.legend = T
+    ncol = 2, nrow = 2, labels = "AUTO", common.legend = T
   )
   
   return(
@@ -757,7 +757,7 @@ average_trial_all_runs_plot = function(timestep_data_task1, timestep_data_task4,
   
   final_plot = ggpubr::ggarrange(
     plot1, plot2, plot3, plot4,
-    ncol = 1, nrow = 4, labels = "auto"
+    ncol = 1, nrow = 4, labels = "AUTO"
   )
   
     
@@ -866,7 +866,7 @@ distribution_plot = function(timestep_data_task1,timestep_data_task4, fitness_da
     
   plot = ggpubr::ggarrange(
     plot1,plot2,
-    ncol = 2, nrow = 1, labels = "auto"
+    ncol = 2, nrow = 1, labels = "AUTO"
   )
 
   return(plot)
